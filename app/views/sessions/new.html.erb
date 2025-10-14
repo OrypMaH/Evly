@@ -1,0 +1,11 @@
+<%= form_with url: session_path do |f|%>
+    <div>
+        <%= f.label :id%>
+        <%= f.text_field :id%>
+    </div>
+    <div>
+        <%= f.label :"Пароль"%>
+        <%= f.password_field :password, placeholder: "            " %>
+    </div>
+    <%= f.submit "Войти" %>
+<% end %>

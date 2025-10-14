@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Evly</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= stylesheet_link_tag 'application', media: 'all', 'data-turbolinks-track': 'reload' %>
+    <%= javascript_pack_tag 'application', 'data-turbolinks-track': 'reload' %>
+  </head>
+
+  <body>
+    <div class="ui fixed inverted menu">
+      <div class="ui container">
+        <%= link_to 'Главная', root_path, class: 'header item' %>
+        <%= link_to 'Мероприятия', events_path, class: 'item' %>
+        <%= link_to 'Роли', roles_path, class: 'item' %>
+        <div class="ui dropdown item">
+        <i class="cog icon"></i>
+        Администрирование
+        <i class="dropdown icon"></i>
+        <div class="menu">
+          <%= link_to manage_roles_departments_path, class: 'item' do %>
+            <i class="user shield icon"></i>
+            Управление ролями
+          <% end %>
+          <%= link_to departments_path, class: 'item' do %>
+            <i class="sitemap icon"></i>
+            Подразделения
+          <% end %>
+          <div class="divider"></div>
+          <%= link_to '#', class: 'item' do %>
+            <i class="chart bar icon"></i>
+            Статистика
+          <% end %>
+        </div>
+      </div>
+        
+      </div>
+        
+        <div class="right menu">
+          <% if user_signed_in? %>
+
+            <div class="ui dropdown item">
+              <i class="id card icon"></i>
+              <span class="text">
+                <%= current_user.current_role&.name&.truncate(35) || "Роль..." %>
+              </span>
+              <i class="dropdown icon"></i>
+              <div class="menu">
+                <div class="header">
+                  <i class="user secret icon"></i>
+                  Выберите роль
+                </div>
+                <% current_user.roles.each do |role| %>
+                  <%= link_to select_current_role_user_path(current_user, role_id: role.id), 
+                              method: :post, 
+                              class: "item #{'active' if role == current_user.current_role}",
+                              data: { turbo: false } do %>
+                    <% if role == current_user.current_role %>
+                      <i class="check circle icon green"></i>
+                    <% else %>
+                      <i class="circle outline icon"></i>
+                    <% end %>
+                    <%= role.name.truncate(35) %>
+                  <% end %>
+                <% end %>
+                
+                <% if current_user.roles.empty? %>
+                  <div class="item disabled">
+                    <i class="ban icon"></i>
+                    Нет ролей
+                  </div>
+                <% end %>
+              </div>
+            </div>
+
+            <div class="ui dropdown item">
+              <i class="user icon"></i>
+              <%= current_user.name %>
+              <i class="dropdown icon"></i>
+              <div class="menu">
+                <%= link_to edit_roles_user_path(current_user), class: 'item' do %>
+                  <i class="edit icon"></i>
+                  Выбрать роли
+                <% end %>
+                <div class="divider"></div>
+                <%= link_to session_path, 
+                            data: { method: :delete }, 
+                            class: 'item' do %>
+                  <i class="sign out icon"></i>
+                  Выход
+                <% end %>
+              </div>
+            </div>
+          <% else %>
+            <%= link_to 'Регистрация', new_user_path, class: 'item' %>
+            <%= link_to 'Авторизация', new_session_path, class: 'item' %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+        
+    <div class="ui main container" style="margin-top: 7em;">
+    <% flash.each do |key, message| %>
+        <div class="ui <%= key %> message">
+          <i class="close icon"></i>
+          <div class="header">
+            <%= message %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+    <div class="ui main container" style="margin-top: 7em;">
+      <%= yield %>
+    </div>
+  </body>
+</html>

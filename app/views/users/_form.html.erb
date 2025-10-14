@@ -1,0 +1,28 @@
+<%= form_with model: @user do |f| %>
+    <div>
+        <%= f.label :Фамилия%>
+        <%= f.text_field :surname, required: true, minlenght: 50, placeholder: "Фамилия" %>
+    </div>
+    <div>
+        <%= f.label :Имя%>
+        <%= f.text_field :name, required: true, maxlenght: 50, placeholder: "Имя" %>
+    </div>
+    <div>
+        <%= f.label :Отчество%>
+        <%= f.text_field :patronymic, required: true, minlenght: 50, placeholder: "Отчество" %>
+    </div>
+    <div>
+        <%= f.label :"Контактные данные"%>
+        <%= f.text_field :contact, required: true, minlenght: 50, placeholder: "Адрес почты или номер телефона" %>
+    </div>
+
+    <div>
+        <%= f.label :"Пароль"%>
+        <%= f.password_field :password, placeholder: "            " %>
+    </div>
+    <div>
+        <%= f.label :"Повторите пароль"%>
+        <%= f.password_field :password_confirmation, placeholder: "            " %>
+    </div>
+    <%= f.submit "Зарегистрироваться" %>
+<% end %>

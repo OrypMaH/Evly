@@ -1,0 +1,31 @@
+<div class="ui container">
+  <div class="ui segment">
+    <h1 class="ui header">
+      <i class="sitemap icon"></i>
+      Подразделения
+    </h1>
+    <%= link_to 'Новое подразделение', new_department_path, class: 'ui primary button' %>
+  </div>
+
+  <div class="ui segment">
+    <div class="ui list">
+      <% @departments.each do |department| %>
+        <div class="item" style="margin-left: <%= department.ancestors.size * 20 %>px;">
+          <i class="folder icon"></i>
+          <div class="content">
+            <div class="header">
+              <%= link_to department.name, department %>
+              <small class="ui text muted"><%= department.description %></small>
+            </div>
+            <div class="description">
+              <%= link_to 'Добавить подразделение', new_department_path(parent_id: department.id), class: 'ui mini button' %>
+              <%= link_to 'Редактировать', edit_department_path(department), class: 'ui mini button' %>
+              <%= link_to 'Удалить', department, method: :delete, class: 'ui mini red button', 
+                    data: { confirm: "Удалить подразделение #{department.name}?" } %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

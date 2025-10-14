@@ -1,0 +1,41 @@
+<%= form_with(model: department, html: { class: 'ui form' }) do |form| %>
+  <% if department.errors.any? %>
+    <div class="ui error message">
+      <div class="header">
+        <%= pluralize(department.errors.count, "error") %> prohibited this department from being saved:
+      </div>
+      <ul class="list">
+        <% department.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= form.label :name, "Название подразделения" %>
+    <%= form.text_field :name, placeholder: "Введите название подразделения" %>
+  </div>
+
+  <div class="field">
+    <%= form.label :description, "Описание" %>
+    <%= form.text_area :description, placeholder: "Введите описание подразделения", rows: 3 %>
+  </div>
+
+  <div class="field">
+    <%= form.label :parent_id, "Родительское подразделение" %>
+    <%= form.collection_select :parent_id, 
+                              Department.where.not(id: department.id).order(:name), 
+                              :id, :full_path, 
+                              { include_blank: "Корневое подразделение" }, 
+                              { class: 'ui dropdown' } %>
+    <div class="ui small text muted">
+      Выберите подразделение верхнего уровня. Оставьте пустым для создания корневого подразделения.
+    </div>
+  </div>
+
+  <div class="ui buttons">
+    <%= form.submit "Сохранить подразделение", class: 'ui primary button' %>
+    <%= link_to 'Отмена', departments_path, class: 'ui button' %>
+  </div>
+<% end %>

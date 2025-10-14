@@ -1,0 +1,55 @@
+<div class="ui container">
+  <div class="ui segment">
+    <h1 class="ui header">
+      <i class="edit icon"></i>
+      Редактирование подразделения
+    </h1>
+    <div class="ui small text muted">
+      Текущий путь: <strong><%= @department.full_path %></strong>
+    </div>
+  </div>
+
+  <div class="ui segment">
+    <%= render 'form', department: @department %>
+  </div>
+
+  <% if @department.roles.any? %>
+    <div class="ui segment">
+      <h3 class="ui header">Роли в этом подразделении</h3>
+      <div class="ui list">
+        <% @department.roles.each do |role| %>
+          <div class="item">
+            <i class="user icon"></i>
+            <div class="content">
+              <div class="header"><%= role.name %></div>
+              <div class="description">
+                Назначена <%= role.users.count %> пользователям
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <% if @department.children.any? %>
+    <div class="ui segment">
+      <h3 class="ui header">Дочерние подразделения</h3>
+      <div class="ui list">
+        <% @department.children.each do |child| %>
+          <div class="item">
+            <i class="folder outline icon"></i>
+            <div class="content">
+              <%= link_to child.name, child %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<script>
+  // Инициализация dropdown Semantic UI
+  $('.ui.dropdown').dropdown();
+</script>

@@ -1,0 +1,40 @@
+
+
+<div class="ui container">
+  <h1 class="ui header">Должности</h1>
+
+  <table class="ui celled table">
+    <thead>
+      <tr>
+        <th class="center aligned">ID</th>
+        <th>Наименование</th>
+        <th>Описание</th>
+        <th class="center aligned">Действия</th>
+      </tr>
+    </thead>
+    
+    <tbody>
+      <% @roles.each do |role| %>
+        <tr>
+          <td class="center aligned"><%= role.id %></td>
+          <td><%= role.name %></td>
+          <td><%= truncate(role.description, length: 50) %></td>
+          <td class="center aligned">
+            <%= link_to edit_role_path(role), class: 'ui icon button' do %>
+              <i class="edit icon"></i>
+            <% end %>
+            
+            <%= link_to role, 
+                class: 'ui icon negative button',
+                data: { 
+                  method: :delete,
+                  confirm: "Вы точно хотите удалить '#{role.name}'?" 
+                } do %>
+              <i class="trash icon"></i>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

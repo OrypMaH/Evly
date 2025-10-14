@@ -1,0 +1,26 @@
+<%= form_with model: @role do |f| %>
+  <% if @role.department_id.present? %>
+    <%= f.hidden_field :department_id %>
+    
+    <div class="ui message">
+      <i class="info circle icon"></i>
+      Роль будет создана в подразделении: 
+      <strong><%= Department.find(@role.department_id).name %></strong>
+    </div>
+  <% else %>
+    <div class="field">
+      <%= f.label :department_id, "Подразделение" %>
+      <%= f.collection_select :department_id, Department.all, :id, :name, 
+                            { include_blank: "Выберите подразделение" },
+                            { class: 'ui dropdown' } %>
+    </div>
+  <% end %>
+  
+  <div class="field">
+    <%= f.label :name, "Название роли" %>
+    <%= f.text_field :name, placeholder: "Введите название роли" %>
+  </div>
+  
+  <%= f.submit "Создать роль", class: 'ui primary button' %>
+  <%= link_to 'Отмена', departments_path, class: 'ui button' %>
+<% end %>

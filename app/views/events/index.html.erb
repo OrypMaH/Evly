@@ -1,0 +1,52 @@
+
+
+<div class="ui container">
+  <h1 class="ui header">Мероприятия</h1>
+  
+  <%= link_to new_event_path, class: 'ui primary button' do %>
+    <i class="plus icon"></i> Создать мероприятие
+  <% end %>
+
+  <table class="ui celled table">
+    <thead>
+      <tr>
+        <th class="center aligned">ID</th>
+        <th>Название</th>
+        <th>Описание</th>
+        <th class="center aligned">Участники</th>
+        <th class="center aligned">Действия</th>
+      </tr>
+    </thead>
+    
+    <tbody>
+      <% @events.each do |event| %>
+        <tr>
+          <td class="center aligned"><%= event.id %></td>
+          <td><%= event.title %></td>
+          <td><%= truncate(event.description, length: 50) %></td>
+          <td class="center aligned">
+            <div class="ui teal circular label">
+              <%= event.people %>
+            </div>
+          </td>
+          <td class="center aligned">
+            <%= link_to edit_event_path(event), class: 'ui icon button' do %>
+              <i class="edit icon"></i>
+            <% end %>
+            
+            <%= link_to event, 
+                class: 'ui icon negative button',
+                data: { 
+                  method: :delete,
+                  confirm: "Вы точно хотите удалить '#{event.title}'?" 
+                } do %>
+              <i class="trash icon"></i>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+<script>
+</script>

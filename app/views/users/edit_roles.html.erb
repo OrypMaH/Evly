@@ -1,0 +1,15 @@
+<%= form_with(model: @user, url: update_roles_user_path(@user), html: { class: 'ui form' }) do |f| %>
+  <div class="ui segment">
+    <h4 class="ui header">Пользователь: <%= @user.full_name %></h4>
+  </div>
+
+  <div class="field">
+    <label>Должности</label>
+    <%= f.select :role_ids, 
+                 Role.all.map { |r| [r.name, r.id] },
+                 { selected: @user.role_ids, include_blank: false },
+                 { multiple: true, class: 'ui fluid dropdown', size: 6 } %>
+  </div>
+
+  <%= f.submit "Сохранить", class: 'ui primary button' %>
+<% end %>

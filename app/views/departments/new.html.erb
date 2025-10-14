@@ -1,0 +1,25 @@
+<div class="ui container">
+  <div class="ui segment">
+    <h1 class="ui header">
+      <i class="plus circle icon"></i>
+      Создание нового подразделения
+    </h1>
+    
+    <% if params[:parent_id] %>
+      <div class="ui info message">
+        <i class="info circle icon"></i>
+        Это подразделение будет создано внутри: 
+        <strong><%= Department.find(params[:parent_id]).full_path %></strong>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="ui segment">
+    <%= render 'form', department: @department %>
+  </div>
+</div>
+
+<script>
+  // Инициализация dropdown Semantic UI
+  $('.ui.dropdown').dropdown();
+</script>
