@@ -25,9 +25,11 @@ class RolesController < ApplicationController
     end
     def new
         @role = Role.new(department_id: params[:department_id])
+        authorize_action(:create, @role)
     end
     def create
         @role=Role.new role_params
+        authorize_action(:create, @role)
         if @role.save
             redirect_to roles_path
         else 
@@ -61,5 +63,11 @@ class RolesController < ApplicationController
     private
     def role_params
         params.require(:role).permit(:name,:description,:department_id)
+    end
+    
+    def authorize_action(action, resource)
+        unless AbacEngine.new(current_user).can?(action, resource)
+        redirect_to root_path, alert: "Доступ запрещен"
+        end
     end
 end

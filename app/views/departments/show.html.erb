@@ -62,9 +62,10 @@
         </div>
       <% end %>
     </div>
-    
-    <%= link_to 'Добавить роль', new_role_path(department_id: @department.id), 
-                class: 'ui green button' %>
+    <% if AbacEngine.new(current_user).can?(:create, Role.new(department: @department)) %>
+      <%= link_to 'Добавить роль', new_role_path(department_id: @department.id), 
+                  class: 'ui green button' %>
+    <% end %>
   </div>
 </div>
 
