@@ -1,6 +1,6 @@
 namespace :permissions do
   desc "Create test permissions and assign to roles"
-  task setup: :environment do
+  task basicsetup: :environment do
     puts "🎯 Setting up permissions system..."
     
     # 1. Создаем разрешение
@@ -22,6 +22,40 @@ namespace :permissions do
       puts "✅ Assigned permission to core_role"
     end
   end
+
+  task fullsetup: :environment do
+    permissions = [
+      { action: "create", resource: "Event", scope: "own_department" },
+      { action: "edit", resource: "Event", scope: "own_department" },
+      { action: "delete", resource: "Event", scope: "own_department" },
+      { action: "show", resource: "Event", scope: "own_department" },
+      { action: "create", resource: "Role", scope: "own_department" },
+      { action: "edit", resource: "Role", scope: "own_department" },
+      { action: "delete", resource: "Role", scope: "own_department" },
+      { action: "show", resource: "Role", scope: "own_department" },
+      { action: "assign", resource: "Role", scope: "own_department" },
+      { action: "create", resource: "Role", scope: "child_departments" },
+      { action: "edit", resource: "Role", scope: "child_departments" },
+      { action: "delete", resource: "Role", scope: "child_departments" },
+      { action: "show", resource: "Role", scope: "child_departments" },
+      { action: "assign", resource: "Role", scope: "child_departments" },
+      { action: "create", resource: "Department", scope: "own_department" },
+      { action: "edit", resource: "Department", scope: "own_department" },
+      { action: "delete", resource: "Department", scope: "own_department" },
+      { action: "show", resource: "Department", scope: "own_department" },
+      { action: "create", resource: "Department", scope: "child_departments" },
+      { action: "edit", resource: "Department", scope: "child_departments" },
+      { action: "delete", resource: "Department", scope: "child_departments" },
+      { action: "show", resource: "Department", scope: "child_departments" }
+    ]
+    core_role = Role.find_by!(
+      id: "1"
+    )
+    permissions.each do |perm|
+      core_role.permissions << Permission.find_or_create_by!(perm)
+    end
+  end
+
 
   desc "Show current permissions state"
   task status: :environment do

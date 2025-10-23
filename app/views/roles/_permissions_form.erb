@@ -1,0 +1,40 @@
+<div class="ui segment">
+  <h3 class="ui dividing header">Разрешения роли</h3>
+  
+  <% grouped_permissions.each do |resource, scopes| %>
+    <div class="resource-group" style="margin-bottom: 2rem;">
+      <h4 class="ui header">
+        <i class="<%= icon_for_resource(resource) %> icon"></i>
+        <%= resource.constantize.model_name.human.pluralize %>
+      </h4>
+      
+      <% scopes.each do |scope, permissions| %>
+        <div class="scope-group" style="margin-left: 1rem; margin-bottom: 1rem;">
+          <h5 class="ui sub header">
+            <%= t("permissions.scopes.#{scope}", default: scope.humanize) %>
+          </h5>
+          
+          <div class="ui list">
+            <% permissions.each do |permission| %>
+              <div class="item">
+                <div class="ui toggle checkbox">
+                  <%= check_box_tag "role[permission_ids][]", 
+                                    permission.id, 
+                                    @role.permission_ids.include?(permission.id),
+                                    id: "role_permission_ids_#{permission.id}",
+                                    class: "hidden" %>
+                  <label>
+                    <strong><%= format_permission_name(permission) %></strong>
+                    <div class="description" style="font-size: 0.9em; color: #666;">
+                      <%= permission.action %> → <%= permission.resource %> → <%= permission.scope %>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

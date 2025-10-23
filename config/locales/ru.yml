@@ -1,0 +1,17 @@
+ru:
+  permissions:
+    generated_name: "%{action} %{resource} (%{scope})"
+    actions:
+      create: "Создание"
+      edit: "Редактирование"
+      update: "Редактирование"
+      delete: "Удаление"
+      show: "Просмотр"
+      assign: "Назначение"
+    resources:
+      Role: "ролей"
+      Department: "подразделений"
+      Event: "мероприятий"
+    scopes:
+      own_department: "в своем подразделении"
+      child_departments: "в подчиненных подразделениях"

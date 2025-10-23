@@ -21,6 +21,15 @@ class Department < ApplicationRecord
     parent_id.nil?
   end
   
+  def is_it_ancestor?(dep)
+    current = self
+    while current.parent.present?
+      current = current.parent
+      return true if current == dep
+    end
+    false
+  end
+
   def ancestors
     return [] if root?
     parent.ancestors + [parent]
@@ -54,6 +63,11 @@ class Department < ApplicationRecord
     # Возвращает подразделения в иерархическом порядке
     all.includes(:parent).sort_by { |dept| dept.ancestors.size }
   end
+
+  def department
+    return self
+  end
+
 
   private
   
