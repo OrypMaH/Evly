@@ -12,14 +12,17 @@ class DepartmentsController < ApplicationController
 
   def show
     @roles = @department.roles.includes(:users)
+    authorize_action(:show, @department)
   end
 
   def new
     @department = Department.new(parent_id: params[:parent_id])
+    authorize_action(:create, @department)
   end
 
   def create
     @department = Department.new(department_params)
+    authorize_action(:create, @department)
     
     if @department.save
       redirect_to @department, notice: 'Подразделение успешно создано'
@@ -29,11 +32,11 @@ class DepartmentsController < ApplicationController
   end
 
   def edit
-    # Убедимся, что подразделение не может быть своим же родителем
-    @available_parents = Department.where.not(id: @department.id)
+    authorize_action(:edit, @department)
   end
 
   def update
+    authorize_action(:edit, @department)
     if @department.update(department_params)
       redirect_to @department, notice: 'Подразделение успешно обновлено'
     else
@@ -54,11 +57,19 @@ class DepartmentsController < ApplicationController
   end
 
   def manage_roles
-      if current_user.current_role
-          @users = current_department.users
-      else
-          @users =[]
+    if current_user.current_role
+      @department = current_department
+      
+      @users = @department.users
+
+      @user_department_roles = {}
+      @users.each do |user|
+        @user_department_roles[user.id] = user.roles.where(department: @department)
       end
+    else
+      @users = []
+      @user_department_roles = {}
+    end
   end
 
   private

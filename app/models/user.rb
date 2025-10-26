@@ -14,6 +14,13 @@ class User < ApplicationRecord
         through: :roles,
          source: :department
   validate :current_role_must_be_assigned
+
+  scope :with_roles_in_department, ->(department) {
+  joins(:roles)
+    .where(roles: { department: department })
+    .distinct
+    .includes(roles: :department)
+}
   
   def full_name
     parts = [surname, name, patronymic].compact

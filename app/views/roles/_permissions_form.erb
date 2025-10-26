@@ -5,7 +5,7 @@
     <div class="resource-group" style="margin-bottom: 2rem;">
       <h4 class="ui header">
         <i class="<%= icon_for_resource(resource) %> icon"></i>
-        <%= resource.constantize.model_name.human.pluralize %>
+        <%= format_resource_title(resource) %>
       </h4>
       
       <% scopes.each do |scope, permissions| %>
@@ -26,7 +26,6 @@
                   <label>
                     <strong><%= format_permission_name(permission) %></strong>
                     <div class="description" style="font-size: 0.9em; color: #666;">
-                      <%= permission.action %> → <%= permission.resource %> → <%= permission.scope %>
                     </div>
                   </label>
                 </div>

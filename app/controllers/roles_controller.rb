@@ -1,6 +1,7 @@
 class RolesController < ApplicationController
     before_action :authenticate_user!
     before_action :store_referer, only: [:new, :edit]
+    before_action :set_role, only: [:edit, :update, :show, :destroy]
     
     def new
         @role = Role.new(department_id: params[:department_id], permission_ids: params[:permission_ids])
@@ -19,12 +20,10 @@ class RolesController < ApplicationController
     end
 
     def edit
-        @role = Role.find_by id: params[:id]
         authorize_action(:edit, @role)
         
     end
     def update
-        @role = Role.find_by id: params[:id]
         authorize_action(:edit, @role)
         if @role.update role_params
             redirect_to stored_referer || department_path(@role.department),
@@ -36,7 +35,6 @@ class RolesController < ApplicationController
     end
     
     def destroy
-        @role = Role.find_by id: params[:id]
         authorize_action(:edit, @role)
         @role.destroy
         redirect_to roles_path
@@ -51,7 +49,6 @@ class RolesController < ApplicationController
     end
 
     def assign_user
-        @role = Role.find(params[:id])
         authorize_action(:assign, @role)
         user = User.find(params[:user_id])
         
@@ -66,7 +63,6 @@ class RolesController < ApplicationController
     end
     
     def remove_user
-        @role = Role.find(params[:id])
         user = User.find(params[:user_id])
         authorize_action(:assign, @role)
         
@@ -79,7 +75,9 @@ class RolesController < ApplicationController
     end
     private
 
-    
+    def set_role
+        @role = Role.find(params[:id])
+    end
 
     def role_params
         params.require(:role).permit(:name,:description,:department_id, permission_ids: [])

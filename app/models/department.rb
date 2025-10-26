@@ -35,12 +35,12 @@ class Department < ApplicationRecord
     parent.ancestors + [parent]
   end
   
-  def descendants
-    children + children.flat_map(&:descendants)
-  end
+def descendants
+  children.flat_map { |child| [child] + child.descendants }
+end
 
   def tree
-    (ancestors + [self] + descendants)
+    ([self] + descendants)
   end
   
   def full_path

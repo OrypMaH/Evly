@@ -1,6 +1,10 @@
 ru:
   permissions:
     generated_name: "%{action} %{resource} (%{scope})"
+    titles:
+      Role: "Роли"
+      Department: "Подразделения"
+      Event: "Мероприятия"
     actions:
       create: "Создание"
       edit: "Редактирование"

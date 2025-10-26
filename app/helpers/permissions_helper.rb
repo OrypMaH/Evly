@@ -16,19 +16,10 @@ module PermissionsHelper
     
     "#{action_text} #{resource_text} #{scope_text}"
   end
-  
-  def humanize_permission_action(action)
-    I18n.t("permissions.actions.#{action}", default: action.humanize)
-  end
-  
-  def humanize_permission_resource(resource)
-    I18n.t("permissions.resources.#{resource}", default: resource.humanize)
-  end
-  
-  def humanize_permission_scope(scope)
-    I18n.t("permissions.scopes.#{scope}", default: scope.humanize)
-  end
 
+  def format_resource_title(resource)
+    I18n.t("permissions.titles.#{resource}", default: resource.humanize)
+  end
   def icon_for_resource(resource)
     case resource
         when "Role" then "user secret"

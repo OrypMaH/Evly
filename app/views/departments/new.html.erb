@@ -5,11 +5,15 @@
       Создание нового подразделения
     </h1>
     
-    <% if params[:parent_id] %>
+    <% if params[:parent_id].present? && (parent_dept = Department.find_by(id: params[:parent_id])) %>
       <div class="ui info message">
         <i class="info circle icon"></i>
-        Это подразделение будет создано внутри: 
-        <strong><%= Department.find(params[:parent_id]).full_path %></strong>
+        Подразделение будет создано внутри: <strong><%= parent_dept.name %></strong>
+      </div>
+    <% else %>
+      <div class="ui warning message">
+        <i class="warning circle icon"></i>
+        Создается корневое подразделение
       </div>
     <% end %>
   </div>

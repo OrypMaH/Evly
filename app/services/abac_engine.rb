@@ -12,6 +12,7 @@ class AbacEngine
       permission_matches?(permission, action, resource)
     end
   end
+  
 
   private
 
