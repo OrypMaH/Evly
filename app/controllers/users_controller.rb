@@ -24,6 +24,7 @@ class UsersController < ApplicationController
     end
     def update_roles
         @user = User.find_by id: params[:id]
+        
         if @user.update(user_role_params)
             redirect_to edit_roles_user_path
         else

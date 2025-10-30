@@ -14,6 +14,7 @@ class User < ApplicationRecord
         through: :roles,
          source: :department
   validate :current_role_must_be_assigned
+  after_commit :refresh_current_role, on: [:create, :update]
 
   scope :with_roles_in_department, ->(department) {
   joins(:roles)
@@ -36,6 +37,15 @@ class User < ApplicationRecord
       super(role)
     else
       errors.add(:current_role, "не назначена пользователю")
+    end
+  end
+
+  def refresh_current_role
+    return if current_role_id.blank?
+    
+    unless roles.exists?(id: current_role_id)
+      new_current_role = roles.any? ? roles.first : nil
+      update(current_role: new_current_role)
     end
   end
   private

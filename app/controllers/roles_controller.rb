@@ -1,7 +1,7 @@
 class RolesController < ApplicationController
     before_action :authenticate_user!
     before_action :store_referer, only: [:new, :edit]
-    before_action :set_role, only: [:edit, :update, :show, :destroy]
+    before_action :set_role, only: [:edit, :update, :show, :destroy, :remove_user, :assign_user]
     
     def new
         @role = Role.new(department_id: params[:department_id], permission_ids: params[:permission_ids])
@@ -66,11 +66,9 @@ class RolesController < ApplicationController
         user = User.find(params[:user_id])
         authorize_action(:assign, @role)
         
-        if @role.users.include?(user)
-            @role.users.delete(user)
-            render json: { success: true, message: "Роль снята с пользователя #{user.full_name}" }
-        else
-            render json: { success: false, message: "Пользователь не имеет этой роли" }
+        user_role = UserRole.find_by(user: user, role: @role)
+        if user_role
+            user_role.destroy
         end
     end
     private

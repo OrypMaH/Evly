@@ -35,11 +35,17 @@ function initSemanticUI() {
 
 // Функция инициализации модального окна
 function initRoleAssignmentModal() {
-    let currentRoleId = null;
+  const assignRoleButtons = document.querySelectorAll('.assign-role-btn');
+  const assignRoleModal = document.getElementById('assignRoleModal');
+  
+  // Если модального окна нет на странице - выходим
+  if (!assignRoleModal) return;
+  
+  let currentRoleId = null;
   let selectedUserId = null;
   
   // Открытие модального окна
-  document.querySelectorAll('.assign-role-btn').forEach(button => {
+  assignRoleButtons.forEach(button => {
     button.addEventListener('click', function() {
       currentRoleId = this.dataset.roleId;
       document.getElementById('modalRoleName').textContent = this.dataset.roleName;
@@ -49,8 +55,11 @@ function initRoleAssignmentModal() {
   });
   
   // Простой поиск
-  const searchInput = document.querySelector('#userSearch input');
+  const searchInput = document.getElementById('userSearchInput');
   const searchResults = document.querySelector('#userSearch .results');
+  
+  // Если поля поиска нет - выходим
+  if (!searchInput) return;
   
   searchInput.addEventListener('input', function(e) {
     const query = e.target.value.trim();

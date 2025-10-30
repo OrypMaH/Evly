@@ -15,33 +15,40 @@
       <div class="ui container">
         <%= link_to 'Главная', root_path, class: 'header item' %>
         <%= link_to 'Мероприятия', events_path, class: 'item' %>
-        <%= link_to current_user.current_role.department.name, current_user.current_role.department, class: 'item' %>
-        <div class="ui dropdown item">
-        <i class="cog icon"></i>
-        Администрирование
-        <i class="dropdown icon"></i>
-        <div class="menu">
-          <%= link_to manage_roles_departments_path, class: 'item' do %>
-            <i class="user shield icon"></i>
-            Управление ролями
+        <% if user_signed_in? %>
+          <% if current_user.current_role %>
+            <div class="ui dropdown item">
+              <i class="cog icon"></i>
+              <%= current_user.current_role.department.name%>
+              <i class="dropdown icon"></i>
+              <div class="menu">
+                <%= link_to manage_roles_departments_path, class: 'item' do%>
+                  <i class="users icon"></i>
+                  Сотрудники
+                <% end %>
+                <%= link_to current_user.current_role.department, class: 'item' do %>
+                  <i class="user shield icon"></i>
+                  Управление ролями
+                <% end %>
+
+                <%= link_to departments_path, class: 'item' do %>
+                  <i class="sitemap icon"></i>
+                  Подразделения
+                <% end %>
+
+                <div class="divider"></div>
+                <%= link_to '#', class: 'item' do %>
+                  <i class="chart bar icon"></i>
+                  Статистика
+                <% end %>
+
+              </div>
+            </div>
           <% end %>
-          <%= link_to departments_path, class: 'item' do %>
-            <i class="sitemap icon"></i>
-            Подразделения
-          <% end %>
-          <div class="divider"></div>
-          <%= link_to '#', class: 'item' do %>
-            <i class="chart bar icon"></i>
-            Статистика
-          <% end %>
-        </div>
-      </div>
-        
-      </div>
+        <% end %>
         
         <div class="right menu">
           <% if user_signed_in? %>
-
             <div class="ui dropdown item">
               <i class="id card icon"></i>
               <span class="text">

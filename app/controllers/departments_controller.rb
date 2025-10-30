@@ -46,6 +46,7 @@ class DepartmentsController < ApplicationController
   end
 
   def destroy
+    authorize_action(:delete, @department)
     if @department.children.any?
       redirect_to departments_path, alert: 'Невозможно удалить подразделение с дочерними элементами'
     elsif @department.roles.any?
