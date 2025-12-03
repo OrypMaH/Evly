@@ -1,0 +1,40 @@
+<div class="ui modal" id="offerParticipationModal">
+  <i class="close icon"></i>
+  <div class="header" id="offerModalHeader">
+    Предложение участия
+  </div>
+  <div class="content">
+    <%= form_tag '', method: :post, class: "ui form", id: "offerParticipationForm" do %>
+      <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+      <input type="hidden" name="event_id" id="modalEventId">
+      
+      <div class="field">
+        <label>Выберите подразделения:</label>
+        <div class="ui relaxed divided list" id="departmentsList">
+          <div class="ui active centered inline loader">Загрузка подразделений...</div>
+        </div>
+      </div>
+      
+      <div class="ui segment">
+        <div class="ui two column grid">
+          <div class="column">
+            <%= link_to "Отмена", "#", 
+                  class: "ui black button",
+                  id: "cancelOfferBtn" %>
+            <%= submit_tag "Предложить участие", 
+                  class: "ui blue button", 
+                  id: "offerSubmitBtn", 
+                  disabled: true,
+                  data: { disable_with: "Отправка..." } %>
+          </div>
+          <div class="column right aligned">
+            <div class="ui statistic">
+              <div class="value" id="selectedDepartmentsCount">0</div>
+              <div class="label">выбрано</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

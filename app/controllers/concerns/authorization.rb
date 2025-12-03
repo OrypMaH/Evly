@@ -10,6 +10,14 @@ module Authorization
                 resource.permissions.keep_if{|perm| current_user.current_role.permissions.include?(perm)}
             end
         end
+
+        def abac_engine
+            @abac_engine ||= AbacEngine.new(current_user)
+        end
+
+        def can?(action, resource)
+            abac_engine.can?(action, resource)
+        end
         helper_method :authorize_action
     end
 end

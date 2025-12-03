@@ -13,6 +13,26 @@ Rails.application.routes.draw do
   # root "posts#index"
   root 'pages#index'
   resources :events, only: [ :index, :new, :edit, :create, :update, :destroy]
+  resources :events do
+    member do
+      get :available_departments
+      get :offer
+      post :offer
+      post :assign   # Назначить участие
+    end
+  end
+  resources :offered_event_departments do
+    member do
+      patch :approve  # Утвердить участие
+      patch :reject   # Отклонить участие
+    end
+  end
+  resources :approved_event_departments do
+    member do
+      patch :approve  # Утвердить участие
+      patch :reject   # Отклонить участие
+    end
+  end
   resources :users, only: [:new, :create, :edit, :update]
   resources :users do
     member do
@@ -28,7 +48,7 @@ Rails.application.routes.draw do
   resource :session, only: [:new, :create, :destroy]
   resources :roles, only: [ :index, :new, :create, :edit, :update, :destroy]
   resources :roles do
-  member do
+    member do
       post :assign_user
       delete :remove_user
     end

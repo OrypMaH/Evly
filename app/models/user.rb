@@ -13,6 +13,7 @@ class User < ApplicationRecord
   has_many :departments, 
         through: :roles,
          source: :department
+  has_many :events, class_name: 'Event', foreign_key: 'creator_id', dependent: :nullify
   validate :current_role_must_be_assigned
   after_commit :refresh_current_role, on: [:create, :update]
 

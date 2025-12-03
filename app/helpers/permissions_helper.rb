@@ -25,7 +25,8 @@ module PermissionsHelper
         when "Role" then "user secret"
         when "Department" then "sitemap" 
         when "Event" then "calendar"
-    else "setting"
-        end
+    else 
+      "setting"
     end
+  end
 end

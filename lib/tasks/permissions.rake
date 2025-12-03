@@ -56,6 +56,63 @@ namespace :permissions do
     end
   end
 
+  task event_permissions: :environment do
+    puts "Обновление разрешений для мероприятий..."
+    
+    event_permissions = [
+      # Базовые права на мероприятие
+      { action: "create", resource: "Event", scope: "personal" },
+      { action: "view", resource: "Event", scope: "personal" },
+      { action: "edit", resource: "Event", scope: "personal" },
+      { action: "delete", resource: "Event", scope: "personal" },
+      
+      # Иерархическое управление мероприятиями
+      { action: "manage", resource: "Event", scope: "department_hierarchy" }
+    ]
+
+    event_department_permissions = [
+      # Низкий уровень: предложение участия
+      { action: "offer", resource: "EventDepartment", scope: "own_department" },
+      { action: "offer", resource: "EventDepartment", scope: "department_hierarchy" },
+      
+      # Высокий уровень: прямое назначение
+      { action: "assign", resource: "EventDepartment", scope: "own_department" },
+      { action: "assign", resource: "EventDepartment", scope: "child_departments" },
+      
+      # Утверждение/отклонение участия
+      { action: "approve", resource: "EventDepartment", scope: "own_department" },
+      { action: "reject", resource: "EventDepartment", scope: "own_department" },
+      
+      # Просмотр участий в иерархии
+      { action: "view", resource: "EventDepartment", scope: "department_hierarchy" }
+    ]
+
+    core_role = Role.find_by!(id: "1")
+    
+    # Удаляем только старые разрешения Event
+    old_event_permissions = Permission.where(resource: "Event")
+    if old_event_permissions.any?
+      core_role.permissions.delete(old_event_permissions)
+      puts "Удалено старых разрешений Event: #{old_event_permissions.count}"
+      old_event_permissions.destroy_all
+    end
+
+    # Добавляем новые
+    event_permissions.each do |perm|
+      permission = Permission.find_or_create_by!(perm)
+      core_role.permissions << permission unless core_role.permissions.include?(permission)
+      puts "Добавлено разрешение: #{perm[:action]} #{perm[:resource]} (#{perm[:scope]})"
+    end
+    
+    event_department_permissions.each do |perm|
+      permission = Permission.find_or_create_by!(perm)
+      core_role.permissions << permission unless core_role.permissions.include?(permission)
+      puts "Добавлено разрешение: #{perm[:action]} #{perm[:resource]} (#{perm[:scope]})"
+    end
+
+    puts "Обновление завершено! Добавлено #{event_permissions.count+event_department_permissions.count} новых разрешений для Event"
+  end
+
 
   desc "Show current permissions state"
   task status: :environment do

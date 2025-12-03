@@ -3,50 +3,104 @@
 <div class="ui container">
   <h1 class="ui header">Мероприятия</h1>
   
-  <%= link_to new_event_path, class: 'ui primary button' do %>
-    <i class="plus icon"></i> Создать мероприятие
-  <% end %>
-
-  <table class="ui celled table">
-    <thead>
-      <tr>
-        <th class="center aligned">ID</th>
-        <th>Название</th>
-        <th>Описание</th>
-        <th class="center aligned">Участники</th>
-        <th class="center aligned">Действия</th>
-      </tr>
-    </thead>
+  <!-- Вкладки -->
+  <div class="ui top attached tabular menu">
+    <%= link_to events_path(tab: 'approved'), 
+                class: "item #{'active' if @active_tab == 'approved'}" do %>
+      <i class="check circle icon"></i>
+      Участвуем
+      <div class="ui teal circular label"><%= participating_count(current_department) %></div>
+    <% end %>
     
-    <tbody>
-      <% @events.each do |event| %>
+    <%= link_to events_path(tab: 'offered'), 
+                class: "item #{'active' if @active_tab == 'offered'}" do %>
+      <i class="hourglass half icon"></i>
+      Предложенные
+      <div class="ui blue circular label"><%= offered_count(current_department) %></div>
+    <% end %>
+    
+    <%= link_to events_path(tab: 'my_events'), 
+                class: "item #{'active' if @active_tab == 'my_events'}" do %>
+      <i class="user icon"></i>
+      Мои мероприятия
+      <div class="ui green circular label"><%= my_events_count %></div>
+    <% end %>
+    
+    <%= link_to events_path(tab: 'all'), 
+                class: "item #{'active' if @active_tab == 'all'}" do %>
+      <i class="list icon"></i>
+      Все мероприятия
+    <% end %>
+
+     <% if can?(:create, Event.new) %>
+      <div class="right item">
+        <%= link_to new_event_path, class: 'ui primary button' do %>
+          <i class="plus icon"></i> Создать мероприятие
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Контент вкладок -->
+  <div class="ui bottom attached segment">
+    <% if abac_engine.can?(:create, Event) %>
+      <div class="ui basic segment">
+        <%= link_to new_event_path, class: 'ui primary button' do %>
+          <i class="plus icon"></i> Создать мероприятие
+        <% end %>
+      </div>
+    <% end %>
+
+    <!-- Таблица мероприятий -->
+    <table class="ui celled table">
+      <thead>
         <tr>
-          <td class="center aligned"><%= event.id %></td>
-          <td><%= event.title %></td>
-          <td><%= truncate(event.description, length: 50) %></td>
-          <td class="center aligned">
-            <div class="ui teal circular label">
-              <%= event.people %>
-            </div>
-          </td>
-          <td class="center aligned">
-            <%= link_to edit_event_path(event), class: 'ui icon button' do %>
-              <i class="edit icon"></i>
-            <% end %>
-            
-            <%= link_to event, 
-                class: 'ui icon negative button',
-                data: { 
-                  method: :delete,
-                  confirm: "Вы точно хотите удалить '#{event.title}'?" 
-                } do %>
-              <i class="trash icon"></i>
-            <% end %>
-          </td>
+          <th class="center aligned">ID</th>
+          <th>Название</th>
+          <th>Описание</th>
+          <th>Статус участия</th>
+          <th class="center aligned">Создатель</th>
+          <th class="center aligned">Действия</th>
         </tr>
-      <% end %>
-    </tbody>
-  </table>
+      </thead>
+      
+      <tbody>
+        <% @events.each do |event| %>
+          <tr>
+            <td class="center aligned"><%= event.id %></td>
+            <td><%= event.title %></td>
+            <td><%= truncate(event.description, length: 50) %></td>
+            <td>
+              <%= render_event_status(event, current_department) %>
+            </td>
+            <td class="center aligned">
+              <%= event.creator.surname %> <%= event.creator.name %>
+            </td>
+            <td class="center aligned">
+              <%= render_event_actions(event) %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+    
+    <% if @events.empty? %>
+      <div class="ui warning message">
+        <div class="header">
+          <% case @active_tab %>
+          <% when 'participating' %>
+            Нет мероприятий с участием вашего подразделения
+          <% when 'proposed' %>
+            Нет предложенных мероприятий
+          <% when 'my_events' %>
+            Вы еще не создали мероприятий
+          <% else %>
+            Мероприятия не найдены
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
 </div>
-<script>
-</script>
+<%= render 'offer_modal' %>
+<%= render 'approve_modal' %>

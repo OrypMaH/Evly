@@ -10,10 +10,20 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_10_21_081615) do
+ActiveRecord::Schema.define(version: 2025_11_19_064309) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "approved_event_departments", force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.bigint "department_id", null: false
+    t.bigint "approved_by_user_id", null: false
+    t.integer "participants_count", default: 1, null: false
+    t.datetime "approved_at"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+  end
 
   create_table "departments", force: :cascade do |t|
     t.string "name"
@@ -26,7 +36,17 @@ ActiveRecord::Schema.define(version: 2025_10_21_081615) do
   create_table "events", force: :cascade do |t|
     t.string "title"
     t.text "description"
-    t.integer "people"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.bigint "creator_id", null: false
+    t.index ["creator_id"], name: "index_events_on_creator_id"
+  end
+
+  create_table "offered_event_departments", force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.bigint "department_id", null: false
+    t.bigint "proposed_by_user_id", null: false
+    t.datetime "proposed_at"
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
   end
@@ -37,7 +57,8 @@ ActiveRecord::Schema.define(version: 2025_10_21_081615) do
     t.string "scope", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
-    t.string "name"
+    t.string "name", null: false
+    t.index ["name"], name: "index_permissions_on_name", unique: true
   end
 
   create_table "role_permissions", force: :cascade do |t|
@@ -79,6 +100,7 @@ ActiveRecord::Schema.define(version: 2025_10_21_081615) do
     t.index ["current_role_id"], name: "index_users_on_current_role_id"
   end
 
+  add_foreign_key "events", "users", column: "creator_id"
   add_foreign_key "role_permissions", "permissions"
   add_foreign_key "role_permissions", "roles"
   add_foreign_key "roles", "departments"

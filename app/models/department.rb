@@ -1,5 +1,4 @@
 class Department < ApplicationRecord
-  # Иерархические связи
   belongs_to :parent, 
             class_name: 'Department', 
             optional: true
@@ -7,13 +6,16 @@ class Department < ApplicationRecord
           class_name: 'Department', 
           foreign_key: :parent_id, 
           dependent: :nullify
-  has_many :roles, 
-          dependent: :destroy
-  has_many :users, 
-          through: :roles,
-          source: :users
-  validates :name, presence: true, 
-            uniqueness: true
+          
+  has_many :roles, dependent: :destroy
+  has_many :users, through: :roles
+
+  has_many :offered_event_departments, dependent: :destroy
+  has_many :approved_event_departments, dependent: :destroy
+  has_many :offered_events, through: :offered_event_departments, class_name: 'Event'
+  has_many :approved_events, through: :approved_event_departments, class_name: 'Event'
+
+  validates :name, presence: true, uniqueness: true
   validate :cannot_be_own_parent
   
   # Методы для иерархии
@@ -29,7 +31,6 @@ class Department < ApplicationRecord
     end
     false
   end
-
   def ancestors
     return [] if root?
     parent.ancestors + [parent]
@@ -49,10 +50,6 @@ end
     else
       "#{parent.full_path} -> #{name}"
     end
-  end
-  
-  def descendants_roles
-
   end
 
   def self.root

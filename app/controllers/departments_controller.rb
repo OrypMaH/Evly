@@ -17,7 +17,7 @@ class DepartmentsController < ApplicationController
 
   def new
     @department = Department.new(parent_id: params[:parent_id])
-    authorize_action(:create, @department)
+    authorize_action(:create, Department.find_by(id: params[:parent_id]))
   end
 
   def create
