@@ -4,7 +4,6 @@
     Утверждение участия
   </div>
   <div class="content">
-    <%# ПРОСТАЯ форма - отправляется обычным HTTP %>
     <%= form_tag '', method: :patch, class: "ui form", id: "approveParticipationForm" do %>
       <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
       

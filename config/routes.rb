@@ -55,8 +55,11 @@ Rails.application.routes.draw do
   end
   resources :departments, only: [ :index, :new, :edit, :create, :update, :destroy]
   resources :departments do
+    member do
+      get :role_list
+    end
     collection do
-      get :manage_roles  #страница управления ролями
+      get :manage_user_roles  #страница управления ролями
     end
   end
 end

@@ -1,0 +1,165 @@
+<div class="ui container">
+  <div class="ui segment">
+    <h1 class="ui header">
+      <i class="building icon"></i>
+      <%= @department.name %>
+    </h1>
+    <% if @department.description.present? %>
+      <p><%= @department.description %></p>
+    <% end %>
+  </div>
+
+  <div class="ui segment">
+    <h3 class="ui header">Роли в подразделении</h3>
+    
+    <div class="ui relaxed divided list">
+      <% @department.roles.each do |role| %>
+        <div class="item">
+          <div class="content">
+            <div class="header">
+              <%= role.name %>
+              
+              <div class="ui buttons" style="float: right;">
+                <!-- Кнопка редактирования роли -->
+                <% if abac_engine.can?(:edit, role) %>
+                  <%= link_to edit_role_path(role), class: 'ui button' do %>
+                    <i class="edit icon"></i>
+                    Редактировать
+                  <% end %>
+                <% end %>
+                
+                <!-- Кнопка для назначения роли -->
+                <% if abac_engine.can?(:assign, role) %>
+                  <button class="ui primary button assign-role-btn" 
+                          data-role-id="<%= role.id %>"
+                          data-role-name="<%= role.name %>">
+                    <i class="user plus icon"></i>
+                    Назначить пользователю
+                  </button>
+                <% end %>
+                
+                <!-- Кнопка удаления роли -->
+                <% if abac_engine.can?(:delete, role) %>
+                  <%= link_to role_path(role), 
+                      method: :delete, 
+                      data: { confirm: 'Удалить роль?' },
+                      class: 'ui red button' do %>
+                    <i class="trash icon"></i>
+                    Удалить
+                  <% end %>
+                <% end %>
+              </div>
+            </div>
+            
+            <!-- Информация о разрешениях роли -->
+            <div class="meta" style="margin-top: 5px; margin-bottom: 10px;">
+              <% if role.permissions.any? %>
+                <div class="ui horizontal list">
+                  <% role.permissions.limit(3).each do |permission| %>
+                    <div class="item">
+                      <div class="ui mini basic label" data-tooltip="<%= permission.name %>">
+                        <%= permission.name %>
+                      </div>
+                    </div>
+                  <% end %>
+                  <% if role.permissions.count > 3 %>
+                    <div class="item">
+                      <div class="ui mini label">
+                        +<%= role.permissions.count - 3 %> еще
+                      </div>
+                    </div>
+                  <% end %>
+                </div>
+              <% else %>
+                <span class="ui tiny text muted">Нет назначенных разрешений</span>
+              <% end %>
+            </div>
+            
+            <div class="description">
+              <% if role.users.any? %>
+                <strong>Пользователи с этой ролью:</strong>
+                <div class="ui horizontal list" style="margin-top: 5px;">
+                  <% role.users.each do |user| %>
+                    <div class="item">
+                      <div class="ui tiny label">
+                        <%= user.full_name %>
+                        <% if abac_engine.can?(:assign, role) %>
+                          <%= link_to remove_user_role_path(role, user_id: user.id), 
+                                      method: :delete, 
+                                      class: 'delete-icon',
+                                      data: { confirm: 'Снять роль с пользователя?' },
+                                      remote: true do %>
+                            <i class="times icon"></i>
+                          <% end %>
+                        <% end %>
+                      </div>
+                    </div>
+                  <% end %>
+                </div>
+              <% else %>
+                <span class="ui tiny text muted">Нет назначенных пользователей</span>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+    
+    <% if abac_engine.can?(:create, Role.new(department: @department)) %>
+      <%= link_to new_role_path(department_id: @department.id), class: 'ui green button' do %>
+        <i class="plus icon"></i>
+        Добавить роль
+      <% end %>
+    <% end %>
+  </div>
+</div>
+
+<!-- Модальное окно для назначения роли -->
+<div class="ui modal" id="assignRoleModal">
+  <i class="close icon"></i>
+  <div class="header">
+    Назначить роль: <span id="modalRoleName"></span>
+  </div>
+  <div class="content">
+    <div class="ui form">
+      <div class="field">
+        <label for="userSearchInput">Поиск пользователя</label>
+        <div class="ui search" id="userSearch" style="width: 100%;">
+          <div class="ui icon input" style="width: 100%;">
+            <input class="prompt" 
+                   type="text" 
+                   placeholder="Введите имя или фамилию..."
+                   id="userSearchInput"                    
+                   name="user_search">                     
+            <i class="search icon"></i>
+          </div>
+          <div class="results" style="
+            position: absolute;
+            width: 100%;
+            background: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+          "></div>
+        </div>
+      </div>
+      
+      <div id="selectedUser" style="display: none; margin-top: 15px;">
+        <div class="ui success message">
+          <div class="header">Выбран пользователь:</div>
+          <p id="selectedUserName"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="actions">
+    <div class="ui black deny button">Отмена</div>
+    <button type="button" class="ui primary button" id="confirmAssign" disabled>
+      <i class="user plus icon"></i>
+      Назначить роль
+    </button>
+  </div>
+</div>

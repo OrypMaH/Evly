@@ -1,5 +1,5 @@
 class DepartmentsController < ApplicationController
-  before_action :set_department, only: [:show, :edit, :update, :destroy]
+  before_action :set_department, only: [:show, :edit, :update, :destroy, :role_list]
   before_action :authenticate_user!
 
   def index
@@ -11,8 +11,21 @@ class DepartmentsController < ApplicationController
   end
 
   def show
+     # Ближайший предок (родитель)
+    @parent = @department.parent
+    
+    # Ближайшие дочерние подразделения (первого уровня)
+    @children = @department.children
+    
+    # Все мероприятия где подразделение участвует (утвержденные)
+    @participating_events = Event.participating_by(@department).limit(10)
+    
+    # Роли в этом подразделении
     @roles = @department.roles.includes(:users)
-    authorize_action(:show, @department)
+    
+    # Статистика
+    @total_users = @department.users.distinct.count
+    @total_events = @participating_events.count
   end
 
   def new
@@ -57,7 +70,7 @@ class DepartmentsController < ApplicationController
     end
   end
 
-  def manage_roles
+  def manage_user_roles
     if current_user.current_role
       @department = current_department
       
@@ -71,6 +84,11 @@ class DepartmentsController < ApplicationController
       @users = []
       @user_department_roles = {}
     end
+  end
+  
+  def role_list
+    @roles = @department.roles.includes(:users)
+    authorize_action(:show, @department)
   end
 
   private

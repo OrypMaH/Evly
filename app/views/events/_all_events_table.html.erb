@@ -1,0 +1,43 @@
+<table class="ui celled striped table">
+  <thead>
+    <tr>
+      <th class="center aligned">ID</th>
+      <th>Название</th>
+      <th>Описание</th>
+      <th>Статус для вас</th>
+      <th class="center aligned">Участников</th>
+      <th class="center aligned">Подразделений</th>
+      <th class="center aligned">Создатель</th>
+      <th class="center aligned">Действия</th>
+    </tr>
+  </thead>
+  
+  <tbody>
+    <% events.each do |event| %>
+      <tr>
+        <td class="center aligned"><%= event.id %></td>
+        <td><%= event.title %></td>
+        <td><%= truncate(event.description, length: 70) %></td>
+        <td>
+          <%= render_event_status(event, current_department) %>
+        </td>
+        <td class="center aligned">
+          <div class="ui teal circular label">
+            <%= event.people %>
+          </div>
+        </td>
+        <td class="center aligned">
+          <div class="ui blue label">
+            <%= event.departments.count %>
+          </div>
+        </td>
+        <td class="center aligned">
+          <%= event.creator.surname %> <%= event.creator.name.first %>.
+        </td>
+        <td class="center aligned">
+          <%= render_event_buttons(event) %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

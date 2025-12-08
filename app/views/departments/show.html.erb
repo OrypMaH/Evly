@@ -1,165 +1,244 @@
+<%# app/views/departments/show.html.erb %>
 <div class="ui container">
-  <div class="ui segment">
-    <h1 class="ui header">
-      <i class="building icon"></i>
-      <%= @department.name %>
-    </h1>
-    <% if @department.description.present? %>
-      <p><%= @department.description %></p>
+  <!-- Хлебные крошки -->
+  <div class="ui breadcrumb">
+    <%= link_to 'Подразделения', departments_path, class: 'section' %>
+    <i class="right angle icon divider"></i>
+    <% @department.ancestors.reverse.each do |ancestor| %>
+      <%= link_to ancestor.name, department_path(ancestor), class: 'section' %>
+      <i class="right angle icon divider"></i>
     <% end %>
+    <div class="active section"><%= @department.name %></div>
   </div>
-
+  
   <div class="ui segment">
-    <h3 class="ui header">Роли в подразделении</h3>
+    <!-- Заголовок -->
+    <div class="ui grid">
+      <div class="twelve wide column">
+        <h1 class="ui header">
+          <%= @department.name %>
+          <% if @department.description.present? %>
+            <div class="sub header"><%= @department.description %></div>
+          <% end %>
+        </h1>
+      </div>
+      <div class="four wide column right aligned">
+        <% if can?(:edit, @department) %>
+          <%= link_to edit_department_path(@department), class: 'ui icon button' do %>
+            <i class="edit icon"></i> Редактировать
+          <% end %>
+        <% end %>
+      </div>
+    </div>
     
-    <div class="ui relaxed divided list">
-      <% @department.roles.each do |role| %>
-        <div class="item">
-          <div class="content">
-            <div class="header">
-              <%= role.name %>
-              
-              <div class="ui buttons" style="float: right;">
-                <!-- Кнопка редактирования роли -->
-                <% if abac_engine.can?(:edit, role) %>
-                  <%= link_to edit_role_path(role), class: 'ui button' do %>
-                    <i class="edit icon"></i>
-                    Редактировать
+    <!-- Основная информация -->
+    <div class="ui divider"></div>
+    
+    <div class="ui three statistics">
+      <div class="statistic">
+        <div class="value">
+          <%= @total_users %>
+        </div>
+        <div class="label">Сотрудников</div>
+      </div>
+      <div class="statistic">
+        <div class="value">
+          <%= @children.count %>
+        </div>
+        <div class="label">Подразделений</div>
+      </div>
+      <div class="statistic">
+        <div class="value">
+          <%= @total_events %>
+        </div>
+        <div class="label">Мероприятий</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Иерархия подразделений -->
+  <div class="ui grid">
+    <div class="eight wide column">
+      <div class="ui segment">
+        <h3 class="ui header">
+          <i class="sitemap icon"></i>
+          Структура подразделения
+        </h3>
+        
+        <% if @parent %>
+          <div class="ui vertical segment">
+            <h4 class="ui header">
+              <i class="level up icon"></i>
+              Вышестоящее подразделение
+            </h4>
+            <div class="ui relaxed list">
+              <div class="item">
+                <i class="folder icon"></i>
+                <div class="content">
+                  <%= link_to @parent.name, department_path(@parent), class: 'header' %>
+                  <% if @parent.description.present? %>
+                    <div class="description"><%= @parent.description %></div>
                   <% end %>
-                <% end %>
-                
-                <!-- Кнопка для назначения роли -->
-                <% if abac_engine.can?(:assign, role) %>
-                  <button class="ui primary button assign-role-btn" 
-                          data-role-id="<%= role.id %>"
-                          data-role-name="<%= role.name %>">
-                    <i class="user plus icon"></i>
-                    Назначить пользователю
-                  </button>
-                <% end %>
-                
-                <!-- Кнопка удаления роли -->
-                <% if abac_engine.can?(:delete, role) %>
-                  <%= link_to role_path(role), 
-                      method: :delete, 
-                      data: { confirm: 'Удалить роль?' },
-                      class: 'ui red button' do %>
-                    <i class="trash icon"></i>
-                    Удалить
-                  <% end %>
-                <% end %>
+                </div>
               </div>
             </div>
-            
-            <!-- Информация о разрешениях роли -->
-            <div class="meta" style="margin-top: 5px; margin-bottom: 10px;">
-              <% if role.permissions.any? %>
-                <div class="ui horizontal list">
-                  <% role.permissions.limit(3).each do |permission| %>
-                    <div class="item">
-                      <div class="ui mini basic label" data-tooltip="<%= permission.name %>">
-                        <%= permission.name %>
-                      </div>
+          </div>
+        <% end %>
+        
+        <% if @children.any? %>
+          <div class="ui vertical segment">
+            <h4 class="ui header">
+              <i class="level down icon"></i>
+              Дочерние подразделения
+            </h4>
+            <div class="ui relaxed divided list">
+              <% @children.each do |child| %>
+                <div class="item">
+                  <i class="folder outline icon"></i>
+                  <div class="content">
+                    <%= link_to child.name, department_path(child), class: 'header' %>
+                    <% if child.description.present? %>
+                      <div class="description"><%= child.description %></div>
+                    <% end %>
+                    <div class="extra">
+                      <small>
+                        <%= child.users.count %> сотрудников,
+                        <%= child.children.count %> подразделений
+                      </small>
                     </div>
-                  <% end %>
-                  <% if role.permissions.count > 3 %>
-                    <div class="item">
-                      <div class="ui mini label">
-                        +<%= role.permissions.count - 3 %> еще
-                      </div>
-                    </div>
-                  <% end %>
+                  </div>
                 </div>
-              <% else %>
-                <span class="ui tiny text muted">Нет назначенных разрешений</span>
-              <% end %>
-            </div>
-            
-            <div class="description">
-              <% if role.users.any? %>
-                <strong>Пользователи с этой ролью:</strong>
-                <div class="ui horizontal list" style="margin-top: 5px;">
-                  <% role.users.each do |user| %>
-                    <div class="item">
-                      <div class="ui tiny label">
-                        <%= user.full_name %>
-                        <% if abac_engine.can?(:assign, role) %>
-                          <%= link_to remove_user_role_path(role, user_id: user.id), 
-                                      method: :delete, 
-                                      class: 'delete-icon',
-                                      data: { confirm: 'Снять роль с пользователя?' },
-                                      remote: true do %>
-                            <i class="times icon"></i>
-                          <% end %>
-                        <% end %>
-                      </div>
-                    </div>
-                  <% end %>
-                </div>
-              <% else %>
-                <span class="ui tiny text muted">Нет назначенных пользователей</span>
               <% end %>
             </div>
           </div>
-        </div>
-      <% end %>
+        <% else %>
+          <div class="ui message">
+            <i class="info circle icon"></i>
+            Нет дочерних подразделений
+          </div>
+        <% end %>
+        
+        <%= link_to 'Показать всю иерархию', '#', 
+              class: 'ui basic button', 
+              id: 'showFullHierarchy' %>
+      </div>
     </div>
     
-    <% if abac_engine.can?(:create, Role.new(department: @department)) %>
-      <%= link_to new_role_path(department_id: @department.id), class: 'ui green button' do %>
-        <i class="plus icon"></i>
-        Добавить роль
+    <!-- Роли в подразделении -->
+    <div class="eight wide column">
+      <div class="ui segment">
+        <h3 class="ui header">
+          <i class="user secret icon"></i>
+          Роли в подразделении
+        </h3>
+        
+        <% if @roles.any? %>
+          <div class="ui relaxed divided list">
+            <% @roles.each do |role| %>
+              <div class="item">
+                <i class="user circle icon"></i>
+                <div class="content">
+                  <div class="header">
+                    <%= role.name %>
+                    <% if role.description.present? %>
+                      <div class="sub header"><%= role.description %></div>
+                    <% end %>
+                  </div>
+                  <div class="description">
+                    <div class="ui tiny horizontal list">
+                      <% role.users.each do |user| %>
+                        <div class="item" title="<%= user.full_name %>">
+                          <%= user.surname %> <%= user.name.first %>.
+                        </div>
+                      <% end %>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="ui message">
+            <i class="info circle icon"></i>
+            В этом подразделении еще нет ролей
+          </div>
+        <% end %>
+        
+        <% if can?(:create, Role.new(department: @department)) %>
+          <div class="ui divider"></div>
+          <%= link_to new_role_path(department_id: @department.id), 
+                class: 'ui primary button' do %>
+            <i class="plus icon"></i> Добавить роль
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Мероприятия -->
+  <div class="ui segment">
+    <h3 class="ui header">
+      <i class="calendar check icon"></i>
+      Мероприятия подразделения
+      <div class="ui teal circular label"><%= @participating_events.count %></div>
+    </h3>
+    
+    <% if @participating_events.any? %>
+      <div class="ui relaxed divided list">
+        <% @participating_events.each do |event| %>
+          <div class="item">
+            <i class="calendar icon"></i>
+            <div class="content">
+              <div class="header">
+                <%= link_to event.title, event_path(event) %>
+                <div class="ui teal mini label">
+                  <%= event.people %> участников
+                </div>
+              </div>
+              <div class="description">
+                <%= truncate(event.description, length: 100) %>
+                <div class="ui mini horizontal list">
+                  <div class="item">
+                    <i class="user icon"></i>
+                    <%= event.creator.surname %> <%= event.creator.name.first %>.
+                  </div>
+                  <div class="item">
+                    <i class="calendar outline icon"></i>
+                    <%= event.created_at.strftime('%d.%m.%Y') %>
+                  </div>
+                  <div class="item">
+                    <i class="users icon"></i>
+                    <%= event.departments.count %> подразделений
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+      
+      <% if Event.participating_by(@department).count > 10 %>
+        <div class="ui divider"></div>
+        <%= link_to 'Все мероприятия подразделения', 
+              events_path(tab: 'approved', department_id: @department.id), 
+              class: 'ui basic button' %>
       <% end %>
+    <% else %>
+      <div class="ui message">
+        <i class="info circle icon"></i>
+        Подразделение не участвует в мероприятиях
+      </div>
     <% end %>
   </div>
 </div>
 
-<!-- Модальное окно для назначения роли -->
-<div class="ui modal" id="assignRoleModal">
-  <i class="close icon"></i>
-  <div class="header">
-    Назначить роль: <span id="modalRoleName"></span>
-  </div>
-  <div class="content">
-    <div class="ui form">
-      <div class="field">
-        <label for="userSearchInput">Поиск пользователя</label>
-        <div class="ui search" id="userSearch" style="width: 100%;">
-          <div class="ui icon input" style="width: 100%;">
-            <input class="prompt" 
-                   type="text" 
-                   placeholder="Введите имя или фамилию..."
-                   id="userSearchInput"                    
-                   name="user_search">                     
-            <i class="search icon"></i>
-          </div>
-          <div class="results" style="
-            position: absolute;
-            width: 100%;
-            background: white;
-            border: 1px solid #ddd;
-            border-top: none;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
-          "></div>
-        </div>
-      </div>
-      
-      <div id="selectedUser" style="display: none; margin-top: 15px;">
-        <div class="ui success message">
-          <div class="header">Выбран пользователь:</div>
-          <p id="selectedUserName"></p>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="actions">
-    <div class="ui black deny button">Отмена</div>
-    <button type="button" class="ui primary button" id="confirmAssign" disabled>
-      <i class="user plus icon"></i>
-      Назначить роль
-    </button>
-  </div>
-</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Показать полную иерархию
+  document.getElementById('showFullHierarchy')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    // Можно реализовать модальное окно с полной иерархией
+    alert('Полная иерархия будет реализована в следующем обновлении');
+  });
+});
+</script>

@@ -29,4 +29,14 @@ class Event < ApplicationRecord
         Department.where(id: offered_event_departments.select(:department_id))
                 .or(Department.where(id: approved_event_departments.select(:department_id)))
     end
+    def event_departments
+        offered_event_departments + approved_event_departments
+    end
+    def people
+        sum = 0
+        approved_event_departments.each do |aed|
+            sum+=aed.participants_count
+        end
+        return sum
+    end
 end

@@ -1,0 +1,71 @@
+<%# app/views/events/_my_events_table.html.erb %>
+<table class="ui celled table">
+  <thead>
+    <tr>
+      <th class="center aligned">ID</th>
+      <th>Название</th>
+      <th>Описание</th>
+      <th>Статусы подразделений</th>
+      <th class="center aligned">Всего участников</th>
+      <th class="center aligned">Дата создания</th>
+      <th class="center aligned">Действия</th>
+    </tr>
+  </thead>
+  
+  <tbody>
+    <% events.each do |event| %>
+      <tr>
+        <td class="center aligned"><%= event.id %></td>
+        <td><strong><%= event.title %></strong></td>
+        <td><%= truncate(event.description, length: 100) %></td>
+        <td>
+          <div class="ui small labels">
+            <% event.event_departments.each do |ed| %>
+              <div class="ui <%= ed.status %> label">
+                <%= ed.department.name.truncate(10) %>
+                <div class="detail">
+                  <% if ed.status == 'approved' %>
+                    <%= ed.participants_count %>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+            <% if event.event_departments.empty? %>
+              <span class="ui grey label">Нет участий</span>
+            <% end %>
+          </div>
+        </td>
+        <td class="center aligned">
+          <div class="ui teal circular label">
+            <%= event.people %>
+          </div>
+        </td>
+        <td class="center aligned">
+          <%= event.created_at.strftime('%d.%m.%Y') %>
+        </td>
+        <td class="center aligned">
+          <%= render_event_buttons(event) %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<%# Хелперы для статусов %>
+<% def ed_status_class(status) %>
+  <% case status %>
+  <% when 'approved' then 'green' %>
+  <% when 'offered' then 'yellow' %>
+  <% when 'rejected' then 'red' %>
+  <% else 'grey' %>
+  <% end %>
+<% end %>
+
+<% def ed_status_text(status) %>
+  <% case status %>
+  <% when 'approved' then '✓' %>
+  <% when 'offered' then '?' %>
+  <% when 'rejected' then '✗' %>
+  <% else '-' %>
+  <% end %>
+<% end %>

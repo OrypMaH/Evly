@@ -22,11 +22,11 @@
               <%= current_user.current_role.department.name%>
               <i class="dropdown icon"></i>
               <div class="menu">
-                <%= link_to manage_roles_departments_path, class: 'item' do%>
+                <%= link_to manage_user_roles_departments_path, class: 'item' do%>
                   <i class="users icon"></i>
                   Сотрудники
                 <% end %>
-                <%= link_to current_user.current_role.department, class: 'item' do %>
+                <%= link_to role_list_department_path(id: current_user.current_role.department.id), class: 'item' do %>
                   <i class="user shield icon"></i>
                   Управление ролями
                 <% end %>
@@ -34,11 +34,6 @@
                 <%= link_to departments_path, class: 'item' do %>
                   <i class="sitemap icon"></i>
                   Подразделения
-                <% end %>
-
-                <%= link_to '#', class: 'item' do %>
-                  <i class="sitemap icon"></i>
-                  Мероприятия
                 <% end %>
 
                 <div class="divider"></div>

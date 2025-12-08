@@ -3,24 +3,29 @@ class EventsController < ApplicationController
     before_action :authenticate_user!
 
     def index
-        @active_tab = params[:tab] || 'participating'
+        @active_tab = params[:tab] || 'my_events'
 
         case @active_tab
         when 'approved'
             # Мероприятия, где подразделение уже участвует
-            @events = Event.participating_by(current_department)
+            @events = []
+            @event_departments = current_department.approved_event_departments
         when 'offered'
             # Предложенные мероприятия (ожидают ответа)
-            @events = Event.offered_to(current_department)
+            @events = []
+            @event_departments = current_department.offered_event_departments
         when 'rejected'
             # Отклоненные мероприятия
-            @events = Event.rejected_by(current_department)
+            @events = []
+            @event_departments = current_department.rejected_event_departments
         when 'my_events'
             # Мои мероприятия (созданные пользователем)
             @events = current_user.events
+            @event_departments = []
         else
             # Все мероприятия
             @events = []
+            @event_departments[]
         end
     end
     
