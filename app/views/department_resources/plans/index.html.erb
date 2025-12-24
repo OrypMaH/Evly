@@ -1,0 +1,158 @@
+<%# app/views/department_plans/index.html.erb %>
+<div class="ui container">
+  <h1 class="ui header">
+    <i class="calendar alternate icon"></i>
+    Планы подразделения: <%= @department.name %>
+  </h1>
+  
+  <!-- Быстрые фильтры -->
+  <div class="ui basic segment">
+    <div class="ui horizontal list">
+      <%= link_to department_plans_path(period: 'all'), 
+                  class: "ui label #{'teal' if @period_filter == 'all'}" do %>
+        Все планы
+        <div class="detail"><%= @department.plans.count %></div>
+      <% end %>
+      
+      <%= link_to department_plans_path(period: 'active'), 
+                  class: "ui label #{'green' if @period_filter == 'active'}" do %>
+        Активные
+        <div class="detail"><%= @active_plans.count %></div>
+      <% end %>
+      
+      <%= link_to department_plans_path(period: 'upcoming'), 
+                  class: "ui label #{'blue' if @period_filter == 'upcoming'}" do %>
+        Будущие
+        <div class="detail"><%= @upcoming_plans.count %></div>
+      <% end %>
+      
+      <%= link_to department_plans_path(period: 'past'), 
+                  class: "ui label #{'grey' if @period_filter == 'past'}" do %>
+        Завершенные
+        <div class="detail"><%= @past_plans.count %></div>
+      <% end %>
+    </div>
+  </div>
+  
+  <!-- Кнопка создания нового плана -->
+  <% if can?(:create, @department.plans.new) %>
+    <div class="ui basic segment">
+      <%= link_to new_department_plan_path, 
+                  class: 'ui primary button' do %>
+        <i class="plus icon"></i> Создать новый план
+      <% end %>
+    </div>
+  <% end %>
+  
+  <!-- Таблица планов -->
+  <% if @plans.any? %>
+    <table class="ui celled striped table">
+      <thead>
+        <tr>
+          <th>Название плана</th>
+          <th class="center aligned">Период</th>
+          <th class="center aligned">Мероприятий</th>
+          <th class="center aligned">Статус</th>
+          <th class="center aligned">Создатель</th>
+          <th class="center aligned">Действия</th>
+        </tr>
+      </thead>
+      
+      <tbody>
+        <% @plans.each do |plan| %>
+          <tr>
+            <td>
+              <strong><%= link_to plan.title, plan_path(plan) %></strong>
+              <% if plan.description.present? %>
+                <div class="ui small text">
+                  <%= truncate(plan.description, length: 100) %>
+                </div>
+              <% end %>
+            </td>
+            <td class="center aligned">
+              <%= plan.start_date.strftime('%d.%m.%Y') %> - <%= plan.end_date.strftime('%d.%m.%Y') %>
+              <% if plan.active? %>
+                <div class="ui green horizontal mini label">Активен</div>
+              <% elsif plan.start_date > Date.current %>
+                <div class="ui blue horizontal mini label">Скоро</div>
+              <% else %>
+                <div class="ui grey horizontal mini label">Завершен</div>
+              <% end %>
+            </td>
+            <td class="center aligned">
+              <div class="ui circular label <%= plan.plan_events.any? ? 'teal' : 'grey' %>">
+                <%= plan.plan_events.count %>
+              </div>
+            </td>
+            <td class="center aligned">
+              <% if plan.active? %>
+                <span class="ui green label">
+                  <i class="play icon"></i> Идет сейчас
+                </span>
+              <% elsif plan.start_date > Date.current %>
+                <span class="ui blue label">
+                  <i class="clock icon"></i> Начнется <%= plan.start_date.strftime('%d.%m') %>
+                </span>
+              <% else %>
+                <span class="ui grey label">
+                  <i class="check icon"></i> Завершен
+                </span>
+              <% end %>
+            </td>
+            <td class="center aligned">
+              <%= plan.creator.surname %> <%= plan.creator.name.first %>.
+            </td>
+            <td class="center aligned">
+              <%= link_to plan_path(plan), 
+                    class: 'ui icon button', title: 'Просмотреть' do %>
+                <i class="eye icon"></i>
+              <% end %>
+              
+              <% if can?(:edit, plan) %>
+                <%= link_to edit_plan_path(plan), 
+                      class: 'ui icon button', title: 'Редактировать' do %>
+                  <i class="edit icon"></i>
+                <% end %>
+              <% end %>
+              
+              <% if can?(:delete, plan) %>
+                <%= link_to plan_path(plan), 
+                      method: :delete,
+                      class: 'ui icon negative button',
+                      title: 'Удалить',
+                      data: { confirm: "Удалить план '#{plan.title}'?" } do %>
+                  <i class="trash icon"></i>
+                <% end %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <div class="ui segment">
+      <div class="ui warning message">
+        <div class="header">Планы не найдены</div>
+        <p>
+          В подразделении "<%= @department.name %>" пока нет созданных планов.
+          <% if can?(:create, @department.plans.new) %>
+            Создайте первый план мероприятий для вашего подразделения.
+          <% end %>
+        </p>
+      </div>
+      
+      <% if can?(:create, @department.plans.new) %>
+        <div class="center aligned">
+          <%= link_to new_plan_path, 
+                class: 'ui primary large button' do %>
+            <i class="plus icon"></i> Создать первый план
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>
+
+<% content_for :javascript_packs do %>
+  <%= javascript_pack_tag 'plans' %>
+<% end %>

@@ -39,14 +39,6 @@ class RolesController < ApplicationController
         @role.destroy
         redirect_to roles_path
     end
-    
-    def index
-        if current_user.current_role
-            @roles = current_user.roles
-        else
-            @roles = []
-        end
-    end
 
     def assign_user
         authorize_action(:assign, @role)
@@ -71,8 +63,8 @@ class RolesController < ApplicationController
             user_role.destroy
         end
     end
-    private
 
+    private
     def set_role
         @role = Role.find(params[:id])
     end
@@ -80,4 +72,5 @@ class RolesController < ApplicationController
     def role_params
         params.require(:role).permit(:name,:description,:department_id, permission_ids: [])
     end
+
 end

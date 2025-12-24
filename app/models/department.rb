@@ -15,6 +15,8 @@ class Department < ApplicationRecord
   has_many :offered_events, through: :offered_event_departments, class_name: 'Event'
   has_many :approved_events, through: :approved_event_departments, class_name: 'Event'
 
+  has_many :plans, dependent: :destroy
+
   validates :name, presence: true, uniqueness: true
   validate :cannot_be_own_parent
   
@@ -65,6 +67,14 @@ end
     return self
   end
 
+  def current_plans
+    plans.current.order(start_date: :desc)
+  end
+  
+  # Активные планы (текущие)
+  def active_plans
+    plans.active.order(start_date: :desc)
+  end
 
   private
   

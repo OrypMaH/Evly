@@ -1,23 +1,22 @@
 <div class="ui container">
   <h1 class="ui header">Мероприятия</h1>
-  
   <!-- Вкладки -->
   <div class="ui top attached tabular menu">
-    <%= link_to events_path(tab: 'approved'), 
+    <%= link_to department_events_path(tab: 'approved'), 
                 class: "item #{'active' if @active_tab == 'approved'}" do %>
       <i class="check circle icon"></i>
       Участвуем
-      <div class="ui teal circular label"><%= participating_count(current_department) %></div>
+      <div class="ui teal circular label"><%= participating_count(Department.find(params[:department_id])) %></div>
     <% end %>
     
-    <%= link_to events_path(tab: 'offered'), 
+    <%= link_to department_events_path(tab: 'offered'), 
                 class: "item #{'active' if @active_tab == 'offered'}" do %>
       <i class="hourglass half icon"></i>
       Предложенные
-      <div class="ui blue circular label"><%= offered_count(current_department) %></div>
+      <div class="ui blue circular label"><%= offered_count(Department.find(params[:department_id])) %></div>
     <% end %>
     
-    <%= link_to events_path(tab: 'my_events'), 
+    <%= link_to department_events_path(tab: 'my_events'), 
                 class: "item #{'active' if @active_tab == 'my_events'}" do %>
       <i class="user icon"></i>
       Мои мероприятия
@@ -55,3 +54,7 @@
 
 <%= render 'offer_modal' %>
 <%= render 'approve_modal' %>
+
+<% content_for :javascript_packs do %>
+  <%= javascript_pack_tag 'events' %>
+<% end %>

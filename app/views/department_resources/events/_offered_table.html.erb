@@ -2,6 +2,7 @@
   <thead>
     <tr>
       <th class="center aligned">ID</th>
+      <th class="center aligned">Период проведения</th>
       <th>Название</th>
       <th>Описание</th>
       <th class="center aligned">Предложено</th>
@@ -15,11 +16,22 @@
     <% event_departments.each do |ed| %>
       <tr>
         <td class="center aligned"><%= ed.event.id %></td>
+        
+        <td class="center aligned">
+          <%= format_event_period(ed.event.start_date, ed.event.end_date) %>
+          <% if ed.event.ongoing? %>
+            <div class="ui green horizontal label">Сейчас</div>
+          <% elsif ed.event.upcoming? %>
+            <div class="ui blue horizontal label">Скоро</div>
+          <% else %>
+            <div class="ui grey horizontal label">Завершено</div>
+          <% end %>
+        </td>
         <td><strong><%= ed.event.title %></strong></td>
         <td><%= truncate(ed.event.description, length: 60) %></td>
         <td class="center aligned">
           <%= ed.created_at.strftime('%d.%m.%Y') if ed %>
-          <%= ed.offered_by.full_name if ed %>
+          <%= ed.proposed_by.full_name if ed %>
         </td>
         <td class="center aligned">
           <div class="ui blue circular label">

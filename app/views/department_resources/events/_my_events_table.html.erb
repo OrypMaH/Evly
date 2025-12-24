@@ -3,6 +3,7 @@
   <thead>
     <tr>
       <th class="center aligned">ID</th>
+      <th class="center aligned">Период проведения</th>
       <th>Название</th>
       <th>Описание</th>
       <th>Статусы подразделений</th>
@@ -16,6 +17,16 @@
     <% events.each do |event| %>
       <tr>
         <td class="center aligned"><%= event.id %></td>
+        <td class="center aligned">
+          <%= format_event_period(event.start_date, event.end_date) %>
+          <% if event.ongoing? %>
+            <div class="ui green horizontal label">Сейчас</div>
+          <% elsif event.upcoming? %>
+            <div class="ui blue horizontal label">Скоро</div>
+          <% else %>
+            <div class="ui grey horizontal label">Завершено</div>
+          <% end %>
+        </td>
         <td><strong><%= event.title %></strong></td>
         <td><%= truncate(event.description, length: 100) %></td>
         <td>

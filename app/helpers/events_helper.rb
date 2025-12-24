@@ -171,4 +171,36 @@ module EventsHelper
     end
   end
 
+  def format_event_period(start_date, end_date)
+    return '' unless start_date && end_date
+    
+    months_ru = %w[
+      января февраля марта апреля мая июня
+      июля августа сентября октября ноября декабря
+    ]
+    
+    # Форматируем даты
+    if start_date.to_date == end_date.to_date
+      date_part = "🕐 #{start_date.strftime('%d.%m.%Y')}"
+    else
+      if start_date.year == end_date.year
+        if start_date.month == end_date.month
+          date_part = "📅 #{start_date.day}–#{end_date.day} #{months_ru[start_date.month - 1]} #{start_date.year}"
+        else
+          date_part = "📅 #{start_date.day} #{months_ru[start_date.month - 1]} – #{end_date.day} #{months_ru[end_date.month - 1]} #{start_date.year}"
+        end
+      else
+        date_part = "📅 #{start_date.day} #{months_ru[start_date.month - 1]} #{start_date.year} – #{end_date.day} #{months_ru[end_date.month - 1]} #{end_date.year}"
+      end
+    end
+    
+    # Время всегда на отдельной строке
+    time_part = "#{start_date.strftime('%H:%M')}–#{end_date.strftime('%H:%M')}"
+    
+    # Возвращаем с разделением на строки
+    content_tag(:div, class: 'event-period') do
+      content_tag(:div, date_part, class: 'date') +
+      content_tag(:div, time_part, class: 'time')
+    end
+  end
 end

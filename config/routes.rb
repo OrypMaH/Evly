@@ -12,11 +12,9 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   # root "posts#index"
   root 'pages#index'
-  resources :events, only: [ :index, :new, :edit, :create, :update, :destroy]
-  resources :events do
+  resources :events, only: [:edit, :new, :create, :update, :destroy] do
     member do
       get :available_departments
-      get :offer
       post :offer
       post :assign   # Назначить участие
     end
@@ -33,8 +31,7 @@ Rails.application.routes.draw do
       patch :reject   # Отклонить участие
     end
   end
-  resources :users, only: [:new, :create, :edit, :update]
-  resources :users do
+  resources :users, only: [:new, :create, :edit, :update] do
     member do
       get :edit_roles
       patch :update_roles
@@ -46,20 +43,35 @@ Rails.application.routes.draw do
     end
   end
   resource :session, only: [:new, :create, :destroy]
-  resources :roles, only: [ :index, :new, :create, :edit, :update, :destroy]
-  resources :roles do
+  resources :roles, only: [ :new, :create, :edit, :update, :destroy] do
     member do
       post :assign_user
       delete :remove_user
     end
   end
-  resources :departments, only: [ :index, :new, :edit, :create, :update, :destroy]
-  resources :departments do
-    member do
-      get :role_list
+  resources :departments, only: [ :index, :new, :edit, :create, :update, :destroy] do
+    scope module: :department_resources do
+      resources :roles, only:[:index]
+      resources :plans, only: [:index, :new]
+      resources :events, only: [:index]
+      resources :users, only: [:index]
     end
     collection do
       get :manage_user_roles  #страница управления ролями
+    end
+  end
+  resources :plan_events, only: [ :edit, :create, :update, :destroy]
+  
+  resources :plans do
+    collection do
+      post :available_for_events  # POST /plans/available_for_events
+    end
+    member do
+      post :bulk_add_events  # Массовое добавление мероприятий
+      get :add_events      # Страница добавления мероприятий
+      post :add_event      # Добавление мероприятия в план
+      delete :remove_event # Удаление мероприятия из плана
+      patch :reorder       # Изменение порядка мероприятий
     end
   end
 end

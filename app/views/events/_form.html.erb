@@ -1,16 +1,41 @@
-<%= form_with model: @event do |f| %>
-    <div>
-        <%= f.label :Название%>
-        <%= f.text_field :title, required: true, minlenght: 2, placeholder: "Название" %>
+
+<%= form_with model: @event, local: true, class: "ui form" do |form| %>
+  <% if @event.errors.any? %>
+    <div class="ui error message">
+      <ul>
+        <% @event.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
     </div>
-    <div>
-        <%= f.label :Описание%>
-        <%= f.text_field :description, placeholder: "Описание" %>
+  <% end %>
+
+  <div class="field">
+    <%= form.label :title, "Название мероприятия" %>
+    <%= form.text_field :title, placeholder: "Введите название" %>
+  </div>
+  
+  <div class="field">
+    <%= form.label :description, "Описание" %>
+    <%= form.text_area :description, rows: 4, placeholder: "Описание мероприятия" %>
+  </div>
+  
+  <div class="two fields">
+    <div class="field">
+      <%= form.label :start_date, "Дата и время начала" %>
+      <%= form.datetime_field :start_date, 
+            value: @event.start_date&.strftime('%Y-%m-%dT%H:%M'),
+            min: Date.today.strftime('%Y-%m-%d') %>
     </div>
     
-    <div>
-        <%= f.label :"Количество участников"%>
-        <%= f.text_field :people, placeholder: "Количество участников" %>
+    <div class="field">
+      <%= form.label :end_date, "Дата и время окончания" %>
+      <%= form.datetime_field :end_date, 
+            value: @event.end_date&.strftime('%Y-%m-%dT%H:%M'),
+            min: @event.start_date&.strftime('%Y-%m-%dT%H:%M') || Date.today.strftime('%Y-%m-%d') %>
     </div>
-    <%= f.submit "Создать" %>
+  </div>
+  
+  <%= form.submit "Сохранить", class: "ui primary button" %>
+  <%= link_to "Отмена", stored_referer, class: "ui button" %>
 <% end %>

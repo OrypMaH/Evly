@@ -8,25 +8,37 @@
 
     <%= stylesheet_link_tag 'application', media: 'all', 'data-turbolinks-track': 'reload' %>
     <%= javascript_pack_tag 'application', 'data-turbolinks-track': 'reload' %>
+    <%= yield :javascript_packs %>
+    
   </head>
 
   <body>
     <div class="ui fixed inverted menu">
       <div class="ui container">
         <%= link_to 'Главная', root_path, class: 'header item' %>
-        <%= link_to 'Мероприятия', events_path, class: 'item' %>
+        
+        <% if user_signed_in? && current_user.department %>
+          <%= link_to department_plans_path(current_user.department.id), class: 'item' do %>
+            <i class="calendar alternate icon"></i>
+            Планирование
+          <% end %>
+        <%= link_to 'Мероприятия', department_events_path(current_user.department.id), class: 'item' %>
+        <% end %>
+        
+        
         <% if user_signed_in? %>
           <% if current_user.current_role %>
             <div class="ui dropdown item">
               <i class="cog icon"></i>
-              <%= current_user.current_role.department.name%>
+              <%= current_user.current_role.department.name %>
               <i class="dropdown icon"></i>
               <div class="menu">
-                <%= link_to manage_user_roles_departments_path, class: 'item' do%>
+                <%= link_to department_users_path(current_user.department.id), class: 'item' do %>
                   <i class="users icon"></i>
                   Сотрудники
                 <% end %>
-                <%= link_to role_list_department_path(id: current_user.current_role.department.id), class: 'item' do %>
+                
+                <%= link_to department_roles_path(current_user.department.id), class: 'item' do %>
                   <i class="user shield icon"></i>
                   Управление ролями
                 <% end %>
@@ -35,6 +47,7 @@
                   <i class="sitemap icon"></i>
                   Подразделения
                 <% end %>
+                
 
                 <div class="divider"></div>
                 <%= link_to '#', class: 'item' do %>
@@ -109,7 +122,7 @@
     </div>
         
     <div class="ui main container" style="margin-top: 4em;">
-    <% flash.each do |key, message| %>
+      <% flash.each do |key, message| %>
         <div class="ui <%= key %> message">
           <i class="close icon"></i>
           <div class="header">
@@ -118,6 +131,7 @@
         </div>
       <% end %>
     </div>
+    
     <div class="ui main container" style="margin-top: 1em;">
       <%= yield %>
     </div>

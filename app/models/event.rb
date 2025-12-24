@@ -4,6 +4,10 @@ class Event < ApplicationRecord
     has_many :offered_event_departments, dependent: :destroy
     has_many :approved_event_departments, dependent: :destroy
 
+    validates :start_date, presence: true
+    validates :end_date, presence: true
+    validate :validate_period_order
+
     def status_for(department)
         if approved_event_departments.for_department(department).exists?
             'approved'
@@ -13,6 +17,11 @@ class Event < ApplicationRecord
             nil
         end
     end
+    
+    scope :upcoming, -> { where('start_date > ?', Time.current) }
+    scope :ongoing, -> { where('start_date <= ? AND end_date >= ?', Time.current, Time.current) }
+    scope :past, -> { where('end_date < ?', Time.current) }
+    scope :in_period, ->(from, to) { where('start_date >= ? AND end_date <= ?', from, to) }
 
     scope :participating_by, ->(department) {
         joins(:approved_event_departments)
@@ -38,5 +47,39 @@ class Event < ApplicationRecord
             sum+=aed.participants_count
         end
         return sum
+    end
+    def period_text
+
+    end
+    def ongoing?
+        start_date <= Time.current && end_date >= Time.current
+    end
+    
+    def upcoming?
+        start_date > Time.current
+    end
+    
+    def past?
+        end_date < Time.current
+    end
+    
+    private
+
+    def normalize_dates
+        return if start_date.blank? || end_date.blank?
+        
+        # Если start_date > end_date, меняем их местами
+        if start_date > end_date
+            self.start_date, self.end_date = end_date, start_date
+        end
+    end
+    
+    def validate_period_order
+        return if start_date.blank? || end_date.blank?
+        
+        # После normalize_dates порядок всегда должен быть правильный
+        if start_date > end_date
+            errors.add(:base, "Дата начала не может быть позже даты окончания")
+        end
     end
 end

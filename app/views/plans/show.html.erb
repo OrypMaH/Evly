@@ -1,0 +1,120 @@
+
+<div class="ui container">
+  <div class="ui segment">
+    <h1 class="ui header">
+      <%= @plan.title %>
+      <div class="sub header">
+        Период: <%= @plan.start_date.strftime('%d.%m.%Y') %> - <%= @plan.end_date.strftime('%d.%m.%Y') %>
+        <% if @plan.ongoing? %>
+          <span class="ui green horizontal label">Активен</span>
+        <% elsif @plan.upcoming? %>
+          <span class="ui blue horizontal label">Предстоящий</span>
+        <% else %>
+          <span class="ui grey horizontal label">Завершен</span>
+        <% end %>
+      </div>
+    </h1>
+    
+    <% if @plan.description.present? %>
+      <div class="ui segment">
+        <h3 class="ui header">Описание плана</h3>
+        <p><%= simple_format(@plan.description) %></p>
+      </div>
+    <% end %>
+    
+    <div class="ui three statistics">
+      <div class="statistic">
+        <div class="value">
+          <i class="building icon"></i>
+          <%= @plan.department.name %>
+        </div>
+        <div class="label">Подразделение</div>
+      </div>
+      <div class="statistic">
+        <div class="value">
+          <i class="user icon"></i>
+          <%= @plan.creator.surname %> <%= @plan.creator.name.first %>.
+        </div>
+        <div class="label">Создатель</div>
+      </div>
+      <div class="statistic">
+        <div class="value">
+          <i class="calendar check icon"></i>
+          <%= @plan.plan_events.count %>
+        </div>
+        <div class="label">Мероприятий в плане</div>
+      </div>
+    </div>
+    
+    <div class="ui segment">
+      <div class="ui two column grid">
+        <div class="column">
+          <h3 class="ui header">Мероприятия в плане</h3>
+        </div>
+        <div class="column right aligned">
+          <% if can?(:update, @plan) %>
+            <%= link_to events_plan_path(@plan), class: 'ui button' do %>
+              <i class="list icon"></i> Управление мероприятиями
+            <% end %>
+          <% end %>
+          <%= link_to 'Список планов', plans_path, class: 'ui button' %>
+        </div>
+      </div>
+      
+      <% if @plan.plan_events.any? %>
+        <div class="ui relaxed divided list">
+          <% @plan.plan_events.includes(event_department: :event).order(:position).each do |plan_event| %>
+            <div class="item">
+              <i class="large calendar middle aligned icon"></i>
+              <div class="content">
+                <div class="header">
+                  <%= plan_event.event_department.event.title %>
+                  <div class="ui mini <%= plan_event.event_department.status == 'approved' ? 'green' : 'yellow' %> label">
+                    <%= plan_event.event_department.status == 'approved' ? 'Утверждено' : 'Ожидает' %>
+                  </div>
+                </div>
+                <div class="description">
+                  <%= plan_event.event_department.event.period_text %>
+                  <% if plan_event.event_department.event.ongoing? %>
+                    <span class="ui green mini horizontal label">Идет сейчас</span>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="ui info message">
+          <p>В плане пока нет мероприятий</p>
+          <% if can?(:update, @plan) %>
+            <%= link_to 'Добавить мероприятия', add_events_plan_path(@plan), class: 'ui primary button' %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+    
+    <div class="ui segment">
+      <div class="ui buttons">
+        <% if can?(:update, @plan) %>
+          <%= link_to edit_plan_path(@plan), class: 'ui button' do %>
+            <i class="edit icon"></i> Редактировать план
+          <% end %>
+        <% end %>
+        
+        <% if can?(:update, @plan) %>
+          <%= link_to events_plan_path(@plan), class: 'ui button' do %>
+            <i class="calendar plus icon"></i> Управление мероприятиями
+          <% end %>
+        <% end %>
+        
+        <% if can?(:delete, @plan) %>
+          <%= link_to @plan, method: :delete, 
+                      class: 'ui red button',
+                      data: { confirm: "Удалить план '#{@plan.title}'? Все связанные данные будут удалены." } do %>
+            <i class="trash icon"></i> Удалить план
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

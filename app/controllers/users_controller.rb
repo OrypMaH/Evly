@@ -1,5 +1,7 @@
 class UsersController < ApplicationController
+    include CurrentDepartmentRedirect
     before_action :get_roles, only: [:edit_roles]
+    before_action :store_referer, only: [:select_current_role]
     
     before_action :authenticate_user!, only: [:manage_roles, :edit_roles, :update_roles, :update, :edit]
     def new
@@ -32,14 +34,17 @@ class UsersController < ApplicationController
         end
     end
     def select_current_role
-        @user = current_user # Только для себя
+        @user = current_user
         role = Role.find_by(id: params[:role_id])
         
         if role && @user.roles.include?(role)
             @user.update(current_role: role)
-            redirect_to request.referer || root_path, notice: "Текущая роль изменена на: #{role.name}"
+            
+            redirect_to redirect_with_proper_department,
+                        notice: "Текущая роль изменена на: #{role.name}"
         else
-            redirect_to request.referer || root_path, alert: "Роль не найдена или не назначена вам"
+            redirect_back fallback_location: root_path,
+                        alert: "Роль не найдена или не назначена вам"
         end
     end
     def update
@@ -91,4 +96,26 @@ class UsersController < ApplicationController
             render json: { users: [] }
         end
     end
+    private
+    def redirect_with_updated_department(referer, department_id)
+        return root_path unless referer
+        
+        begin
+            uri = URI.parse(referer)
+            path = uri.path
+            
+                if path.match?(%r{^/departments/\d+/})
+                    # Заменяем ID в пути
+                    new_path = path.gsub(%r{^/departments/\d+}, "/departments/#{department_id}")
+                    uri.path = new_path
+                    return uri.to_s
+                end
+            
+            uri.to_s
+        rescue URI::InvalidURIError
+            referer
+        end
+    end
+
+# Использование:
 end

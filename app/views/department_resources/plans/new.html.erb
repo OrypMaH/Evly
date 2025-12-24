@@ -1,0 +1,27 @@
+<div class="ui container">
+  <div class="ui segment">
+    <h1 class="ui header">
+      <i class="plus icon"></i>
+      Создание нового плана
+      <div class="sub header">
+          <% if params[:department_id].present? && (dept = Department.find_by(id: params[:department_id])) %>
+              Для подразделения: <%= dept.name %>
+          <% else %>
+          <% end %>
+      </div>
+    </h1>
+    
+    <div class="ui message">
+      <div class="header">Что такое план?</div>
+      <p>
+        План - это список мероприятий вашего подразделения на определенный период.
+        Вы можете добавлять мероприятия из тех, в которых участвует ваше подразделение.
+      </p>
+    </div>
+    
+    <%= render 'form', plan: @plan %>
+  </div>
+</div>
+<% content_for :javascript_packs do %>
+  <%= javascript_pack_tag 'plans' %>
+<% end %>

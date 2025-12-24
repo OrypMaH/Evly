@@ -1,4 +1,5 @@
 class ApprovedEventDepartmentsController < ApplicationController
+  before_action :store_referer, only: [:approve, :reject]
   def approve
     @approved = ApprovedEventDepartment.find(params[:id])
     
@@ -6,9 +7,9 @@ class ApprovedEventDepartmentsController < ApplicationController
       participants_count = params[:participants_count] || 1
       
       @approved.approve!(current_user, participants_count)
-      redirect_to events_path, notice: "Участие в мероприятии #{@event_department.event.title} изменено"
+      redirect_to stored_referer, notice: "Участие в мероприятии #{@event_department.event.title} изменено"
     else
-      redirect_to events_path, alert: "Недостаточно прав для утверждения участия"
+      redirect_to stored_referer, alert: "Недостаточно прав для утверждения участия"
     end
   end
 
@@ -17,9 +18,9 @@ class ApprovedEventDepartmentsController < ApplicationController
     if can?(:reject, @approved)
       title = @approved.event.title
       @approved.reject!
-      redirect_to events_path, notice: "Участие в мероприятии #{title} отклонено"
+      redirect_to stored_referer, notice: "Участие в мероприятии #{title} отклонено"
     else
-      redirect_to events_path, alert: "Недостаточно прав для отклонения участия"
+      redirect_to stored_referer, alert: "Недостаточно прав для отклонения участия"
     end
   end
 end

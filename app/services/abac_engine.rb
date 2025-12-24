@@ -52,7 +52,7 @@ class AbacEngine
       else
         false # Неизвестный scope
       end
-    when Role, Department
+    when Role, Department, Plan
       case scope
       when "own_department"
         # Ресурс должен быть в том же подразделении что и пользователь

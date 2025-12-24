@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_11_19_064309) do
+ActiveRecord::Schema.define(version: 2025_12_09_094702) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -39,6 +39,8 @@ ActiveRecord::Schema.define(version: 2025_11_19_064309) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.bigint "creator_id", null: false
+    t.datetime "start_date"
+    t.datetime "end_date"
     t.index ["creator_id"], name: "index_events_on_creator_id"
   end
 
@@ -59,6 +61,29 @@ ActiveRecord::Schema.define(version: 2025_11_19_064309) do
     t.datetime "updated_at", precision: 6, null: false
     t.string "name", null: false
     t.index ["name"], name: "index_permissions_on_name", unique: true
+  end
+
+  create_table "plan_events", force: :cascade do |t|
+    t.bigint "plan_id", null: false
+    t.bigint "event_department_id", null: false
+    t.integer "position"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["event_department_id"], name: "index_plan_events_on_event_department_id"
+    t.index ["plan_id"], name: "index_plan_events_on_plan_id"
+  end
+
+  create_table "plans", force: :cascade do |t|
+    t.string "title", null: false
+    t.text "description"
+    t.date "start_date", null: false
+    t.date "end_date", null: false
+    t.bigint "department_id", null: false
+    t.bigint "creator_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["creator_id"], name: "index_plans_on_creator_id"
+    t.index ["department_id"], name: "index_plans_on_department_id"
   end
 
   create_table "role_permissions", force: :cascade do |t|
@@ -101,6 +126,10 @@ ActiveRecord::Schema.define(version: 2025_11_19_064309) do
   end
 
   add_foreign_key "events", "users", column: "creator_id"
+  add_foreign_key "plan_events", "approved_event_departments", column: "event_department_id"
+  add_foreign_key "plan_events", "plans"
+  add_foreign_key "plans", "departments"
+  add_foreign_key "plans", "users", column: "creator_id"
   add_foreign_key "role_permissions", "permissions"
   add_foreign_key "role_permissions", "roles"
   add_foreign_key "roles", "departments"

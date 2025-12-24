@@ -114,52 +114,8 @@
   </div>
 </div>
 
-<!-- Модальное окно для назначения роли -->
-<div class="ui modal" id="assignRoleModal">
-  <i class="close icon"></i>
-  <div class="header">
-    Назначить роль: <span id="modalRoleName"></span>
-  </div>
-  <div class="content">
-    <div class="ui form">
-      <div class="field">
-        <label for="userSearchInput">Поиск пользователя</label>
-        <div class="ui search" id="userSearch" style="width: 100%;">
-          <div class="ui icon input" style="width: 100%;">
-            <input class="prompt" 
-                   type="text" 
-                   placeholder="Введите имя или фамилию..."
-                   id="userSearchInput"                    
-                   name="user_search">                     
-            <i class="search icon"></i>
-          </div>
-          <div class="results" style="
-            position: absolute;
-            width: 100%;
-            background: white;
-            border: 1px solid #ddd;
-            border-top: none;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
-          "></div>
-        </div>
-      </div>
-      
-      <div id="selectedUser" style="display: none; margin-top: 15px;">
-        <div class="ui success message">
-          <div class="header">Выбран пользователь:</div>
-          <p id="selectedUserName"></p>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="actions">
-    <div class="ui black deny button">Отмена</div>
-    <button type="button" class="ui primary button" id="confirmAssign" disabled>
-      <i class="user plus icon"></i>
-      Назначить роль
-    </button>
-  </div>
-</div>
+<%= render 'assign_role_modal'%>
+
+<% content_for :javascript_packs do %>
+  <%= javascript_pack_tag 'roles' %>
+<% end %>

@@ -70,21 +70,7 @@ class DepartmentsController < ApplicationController
     end
   end
 
-  def manage_user_roles
-    if current_user.current_role
-      @department = current_department
-      
-      @users = @department.users
 
-      @user_department_roles = {}
-      @users.each do |user|
-        @user_department_roles[user.id] = user.roles.where(department: @department)
-      end
-    else
-      @users = []
-      @user_department_roles = {}
-    end
-  end
   
   def role_list
     @roles = @department.roles.includes(:users)

@@ -10,6 +10,9 @@ class User < ApplicationRecord
   has_one :department, 
         through: :current_role,
         source: :department
+  has_one :current_department, 
+        through: :current_role,
+        source: :department
   has_many :departments, 
         through: :roles,
          source: :department

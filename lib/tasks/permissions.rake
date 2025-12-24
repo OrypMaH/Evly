@@ -22,7 +22,102 @@ namespace :permissions do
       puts "✅ Assigned permission to core_role"
     end
   end
-
+  task add_plan_permissions: :environment do
+    puts "Добавление прав для планов (Plan)..."
+    
+    plan_permissions = [
+      # Права на планы в своем подразделении
+      { action: "create", resource: "Plan", scope: "own_department" },
+      { action: "edit", resource: "Plan", scope: "own_department" },
+      { action: "delete", resource: "Plan", scope: "own_department" },
+      { action: "show", resource: "Plan", scope: "own_department" },
+      { action: "manage", resource: "Plan", scope: "own_department" },
+      
+      # Права на планы в дочерних подразделениях
+      { action: "create", resource: "Plan", scope: "child_departments" },
+      { action: "edit", resource: "Plan", scope: "child_departments" },
+      { action: "delete", resource: "Plan", scope: "child_departments" },
+      { action: "show", resource: "Plan", scope: "child_departments" },
+      { action: "manage", resource: "Plan", scope: "child_departments" },
+      
+      # Права на управление мероприятиями внутри плана
+      { action: "add_event", resource: "Plan", scope: "own_department" },
+      { action: "remove_event", resource: "Plan", scope: "own_department" },
+      { action: "reorder_events", resource: "Plan", scope: "own_department" },
+      
+      { action: "add_event", resource: "Plan", scope: "child_departments" },
+      { action: "remove_event", resource: "Plan", scope: "child_departments" },
+      { action: "reorder_events", resource: "Plan", scope: "child_departments" }
+    ]
+    
+    core_role = Role.find_by!(id: "1")
+    
+    plan_permissions.each do |perm|
+      permission = Permission.find_or_create_by!(perm)
+      unless core_role.permissions.include?(permission)
+        core_role.permissions << permission
+        puts "Добавлено разрешение: #{perm[:action]} #{perm[:resource]} (#{perm[:scope]})"
+      else
+        puts "Разрешение уже существует: #{perm[:action]} #{perm[:resource]} (#{perm[:scope]})"
+      end
+    end
+    
+    puts "Добавлено #{plan_permissions.count} разрешений для Plan"
+    puts "Всего разрешений у роли: #{core_role.permissions.count}"
+  end
+  task redo_plan_permissions: :environment do
+    puts "Перенастройка разрешений для планов и департаментов..."
+    
+    # Находим роль
+    core_role = Role.find_by!(id: "1")
+    
+    # Последние 6 разрешений, которые нужно удалить
+    permissions_to_remove = [
+      { action: "add_event", resource: "Plan", scope: "own_department" },
+      { action: "remove_event", resource: "Plan", scope: "own_department" },
+      { action: "reorder_events", resource: "Plan", scope: "own_department" },
+      { action: "add_event", resource: "Plan", scope: "child_departments" },
+      { action: "remove_event", resource: "Plan", scope: "child_departments" },
+      { action: "reorder_events", resource: "Plan", scope: "child_departments" }
+    ]
+    
+    # Удаляем старые разрешения у роли
+    permissions_to_remove.each do |perm_attrs|
+      permission = Permission.find_by(perm_attrs)
+      if permission && core_role.permissions.include?(permission)
+        permission.destroy
+        puts "Удалено разрешение: #{perm_attrs[:action]} #{perm_attrs[:resource]} (#{perm_attrs[:scope]})"
+        
+      else
+        puts "Разрешение не найдено: #{perm_attrs[:action]} #{perm_attrs[:resource]} (#{perm_attrs[:scope]})"
+      end
+    end
+    
+    # Создаем новые разрешения для Department
+    department_permissions = [
+      { action: "add_event", resource: "Department", scope: "own_department" },
+      { action: "remove_event", resource: "Department", scope: "own_department" },
+      { action: "reorder_events", resource: "Department", scope: "own_department" },
+      { action: "add_event", resource: "Department", scope: "child_departments" },
+      { action: "remove_event", resource: "Department", scope: "child_departments" },
+      { action: "reorder_events", resource: "Department", scope: "child_departments" }
+    ]
+    
+    # Добавляем новые разрешения
+    department_permissions.each do |perm|
+      permission = Permission.find_or_create_by!(perm)
+      unless core_role.permissions.include?(permission)
+        core_role.permissions << permission
+        puts "Добавлено новое разрешение: #{perm[:action]} #{perm[:resource]} (#{perm[:scope]})"
+      else
+        puts "Разрешение уже существует: #{perm[:action]} #{perm[:resource]} (#{perm[:scope]})"
+      end
+    end
+    
+    puts "Готово! Удалено #{permissions_to_remove.count} старых разрешений."
+    puts "Добавлено #{department_permissions.count} новых разрешений для Department."
+    puts "Всего разрешений у роли: #{core_role.permissions.count}"
+  end
   task fullsetup: :environment do
     permissions = [
       { action: "create", resource: "Event", scope: "own_department" },

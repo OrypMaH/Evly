@@ -1,7 +1,7 @@
 class OfferedEventDepartment < ApplicationRecord
   belongs_to :event
   belongs_to :department
-  belongs_to :offered_by, class_name: 'User', foreign_key: 'proposed_by_user_id'
+  belongs_to :proposed_by, class_name: 'User', foreign_key: 'proposed_by_user_id'
   
   validates :event, presence: true
   validates :department, presence: true

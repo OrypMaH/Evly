@@ -1,0 +1,95 @@
+<table class="ui celled table">
+  <thead>
+    <tr>
+      <th class="center aligned" style="width: 50px;">
+        <div class="ui checkbox">
+          <input type="checkbox" id="selectAllCheckbox">
+          <label></label>
+        </div>
+      </th>
+      <th class="center aligned">ID</th>
+      <th class="center aligned">Период проведения</th>
+      <th>Название</th>
+      <th>Описание</th>
+      <th class="center aligned">Наши участники</th>
+      <th class="center aligned">Всего участников</th>
+      <th class="center aligned">Утверждено</th>
+      <th class="center aligned">Статус</th>
+      <th class="center aligned">Действия</th>
+    </tr>
+  </thead>
+  
+  <tbody>
+    <% event_departments.each do |ed| %>
+      <tr>
+        <td class="center aligned">
+          <% if ed %>
+            <div class="ui checkbox">
+              <input type="checkbox" 
+       class="event-checkbox" 
+       value="<%= ed.id %>" 
+       data-event-title="<%= ed.event.title %>"
+       data-event-start-date="<%= ed.event.start_date.strftime('%Y-%m-%d') %>"
+       data-event-department-id="<%= ed.department.id %>">
+              <label></label>
+            </div>
+          <% end %>
+        </td>
+        <td class="center aligned"><%= ed.event.id %></td>
+        
+        <td class="center aligned">
+          <%= format_event_period(ed.event.start_date, ed.event.end_date) %>
+          <% if ed.event.ongoing? %>
+            <div class="ui green horizontal label">Сейчас</div>
+          <% elsif ed.event.upcoming? %>
+            <div class="ui blue horizontal label">Скоро</div>
+          <% else %>
+            <div class="ui grey horizontal label">Завершено</div>
+          <% end %>
+        </td>
+        <td><%= ed.event.title %></td>
+        <td><%= truncate(ed.event.description, length: 80) %></td>
+        <td class="center aligned">
+        <div class="ui teal circular label">
+          <%= ed.participants_count %>
+        </div>
+        </td>
+        <td class="center aligned">
+          <div class="ui blue circular label">
+            <%= ed.event.people %>
+          </div>
+        </td>
+        <td class="center aligned">
+          <% if ed%>
+            <%= ed.created_at.strftime('%d.%m.%Y') %>
+            <%= ed.approved_by.full_name %> 
+          <% end %>
+        </td>
+        <td class="center aligned">
+          <%= render_event_status(ed.event, ed.department) %>
+        </td>
+        <td class="center aligned">
+          <%= render_event_buttons(ed) %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+<% if event_departments.any? && can?(:add_event, Department.find(params[:department_id])) %>
+  <div class="ui segment">
+    <div class="ui buttons">
+      <button id="bulkAddButton" class="ui primary button" disabled>
+        <i class="plus icon"></i> Добавить выбранные в план
+      </button>
+      <div class="or"></div>
+      <button id="clearSelectionButton" class="ui button">
+        <i class="times icon"></i> Снять выделение
+      </button>
+    </div>
+    <div class="ui label" id="selectedCountLabel" style="margin-left: 10px;">
+      Выбрано: <span id="selectedCount">0</span>
+    </div>
+  </div>
+<% end %>
+
+<%= render 'department_resources/plans/bulk_add_modal' %>
