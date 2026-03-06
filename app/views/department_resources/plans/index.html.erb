@@ -62,7 +62,7 @@
         <% @plans.each do |plan| %>
           <tr>
             <td>
-              <strong><%= link_to plan.title, plan_path(plan) %></strong>
+              <strong><%= link_to plan.title, department_plan_path(@department,plan) %></strong>
               <% if plan.description.present? %>
                 <div class="ui small text">
                   <%= truncate(plan.description, length: 100) %>
@@ -103,20 +103,20 @@
               <%= plan.creator.surname %> <%= plan.creator.name.first %>.
             </td>
             <td class="center aligned">
-              <%= link_to plan_path(plan), 
+              <%= link_to department_plan_path(@department, plan), 
                     class: 'ui icon button', title: 'Просмотреть' do %>
                 <i class="eye icon"></i>
               <% end %>
               
               <% if can?(:edit, plan) %>
-                <%= link_to edit_plan_path(plan), 
+                <%= link_to edit_department_plan_path(@department, plan), 
                       class: 'ui icon button', title: 'Редактировать' do %>
                   <i class="edit icon"></i>
                 <% end %>
               <% end %>
               
               <% if can?(:delete, plan) %>
-                <%= link_to plan_path(plan), 
+                <%= link_to plan_path( plan), 
                       method: :delete,
                       class: 'ui icon negative button',
                       title: 'Удалить',
@@ -143,7 +143,7 @@
       
       <% if can?(:create, @department.plans.new) %>
         <div class="center aligned">
-          <%= link_to new_plan_path, 
+          <%= link_to new_department_plan_path(@department), 
                 class: 'ui primary large button' do %>
             <i class="plus icon"></i> Создать первый план
           <% end %>

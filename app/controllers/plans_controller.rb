@@ -2,31 +2,19 @@
 class PlansController < ApplicationController
   before_action :authenticate_user!
   before_action :store_referer, only: [:bulk_add_events]
-  before_action :set_plan, only: [:show, :edit, :update, :destroy, :events, :add_events, :add_event, :remove_event, :reorder, :bulk_add_events]
+  before_action :set_plan, only: [:destroy,:events, :add_events, :add_event, :remove_event, :reorder, :bulk_add_events]
   before_action :check_permissions_for_plan, except: [:new, :create, :index, :department, :my_plans, :events]
   
-
+  def index
+    # Если запрос для bulk add modal
+    if params[:for_bulk_add].present?
+      render_bulk_add_plans
+    else
+      # Обычный список планов
+      @plans = []
+    end
+  end
   
-  def show
-  end 
-  def create
-    @plan = Plan.new(plan_params)
-    @plan.creator = current_user
-    check_permissions_for_plan
-    if @plan.save
-      redirect_to @plan, notice: 'План успешно создан'
-    else
-      render :new
-    end
-  end
-  def update
-    authorize_action(:edit, @plan)
-    if @plan.update(plan_params)
-      redirect_to @plan, notice: 'Подразделение успешно обновлено'
-    else
-      render :edit
-    end
-  end
   # app/controllers/plans_controller.rb
   def bulk_add_events
     event_department_ids = Array(params[:event_department_ids]).map(&:to_i)
@@ -45,6 +33,7 @@ class PlansController < ApplicationController
       
       # Проверяем что мероприятие из того же подразделения что и план
       if event_department.department == @plan.department
+        check_permissions_for_plan
         unless @plan.event_department_ids.include?(event_department_id)
           if @plan.plan_events.create(event_department: event_department)
             added_count += 1
@@ -65,7 +54,7 @@ class PlansController < ApplicationController
       redirect_to stored_referer alert: "Не удалось добавить мероприятия"
     end
   end
-
+  
   def department_plans
     department = Department.find(params[:department_id])
     @plans = Plan.for_department(department).order(created_at: :desc)
@@ -83,13 +72,12 @@ class PlansController < ApplicationController
   end
 
   def destroy
-    authorize_action(:delete, @plan)
-      @dept=@plan.department
+      dept=@plan.department
       @plan.destroy
-      redirect_to department_plans_path(@dept)
+      redirect_to department_plans_path(dept)
   end
-  def available_for_events
-    event_department_ids = params[:event_department_ids] || []
+  def render_bulk_add_plans
+    event_department_ids = Array(params[:event_department_ids]).map(&:to_i)
     min_start_date = params[:min_start_date]
     max_start_date = params[:max_start_date]
     
@@ -148,12 +136,8 @@ class PlansController < ApplicationController
   def can_view_plans?(department)
     can?(:add_event, department) 
   end
-    private
-    
-    def set_plan
+  private
+  def set_plan
       @plan = Plan.find(params[:id])
-    end
-    def plan_params
-      params.require(:plan).permit(:title, :description, :start_date, :end_date, :department_id)
-    end
   end
+end

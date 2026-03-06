@@ -1,3 +1,26 @@
-<h1>Изменить мероприятие</h1>
+<div class="ui container">
+  <div class="ui segment">
+    <h1 class="ui header">
+      <i class="edit icon"></i>
+      Редактирование мероприятия
+      <div class="sub header">
+        <%= @event.title %>
+      </div>
+    </h1>
+    
+    <div class="ui info message">
+      <div class="header">Информация о мероприятии:</div>
+      <ul class="list">
+        <li>Создано: <strong><%= @event.created_at.strftime('%d.%m.%Y %H:%M') %></strong></li>
+        <li>Создатель: <strong><%= @event.creator.full_name %></strong></li>
+        <li>Статус участия: <strong><%= @event.status_for(current_department) || 'Не участвует' %></strong></li>
+      </ul>
+    </div>
+    
+    <%= render 'form', event: @event %>
+  </div>
+</div>
 
-<%= render'form'%>
+<% content_for :javascript_pack do %>
+  <%= javascript_pack_tag 'events_form' %>
+<% end %>

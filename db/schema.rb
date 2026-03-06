@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_12_09_094702) do
+ActiveRecord::Schema.define(version: 2026_03_06_055135) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -33,6 +33,34 @@ ActiveRecord::Schema.define(version: 2025_12_09_094702) do
     t.datetime "updated_at", precision: 6, null: false
   end
 
+  create_table "directions", force: :cascade do |t|
+    t.string "name", null: false
+    t.text "description"
+    t.bigint "department_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["department_id", "name"], name: "index_directions_on_department_id_and_name", unique: true
+    t.index ["department_id"], name: "index_directions_on_department_id"
+  end
+
+  create_table "educational_organizations", force: :cascade do |t|
+    t.string "name"
+    t.string "federal_district"
+    t.string "federal_subject"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["name"], name: "index_educational_organizations_on_name", unique: true
+  end
+
+  create_table "event_levels", force: :cascade do |t|
+    t.string "name", null: false
+    t.integer "priority", default: 0
+    t.string "description"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["priority"], name: "index_event_levels_on_priority"
+  end
+
   create_table "events", force: :cascade do |t|
     t.string "title"
     t.text "description"
@@ -41,7 +69,14 @@ ActiveRecord::Schema.define(version: 2025_12_09_094702) do
     t.bigint "creator_id", null: false
     t.datetime "start_date"
     t.datetime "end_date"
+    t.bigint "event_level_id"
+    t.string "format"
+    t.string "location"
+    t.bigint "direction_id", null: false
+    t.integer "educational_organization_id"
     t.index ["creator_id"], name: "index_events_on_creator_id"
+    t.index ["direction_id"], name: "index_events_direction_id"
+    t.index ["event_level_id"], name: "index_events_on_event_level_id"
   end
 
   create_table "offered_event_departments", force: :cascade do |t|
@@ -86,6 +121,18 @@ ActiveRecord::Schema.define(version: 2025_12_09_094702) do
     t.index ["department_id"], name: "index_plans_on_department_id"
   end
 
+  create_table "responsible_people", force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.bigint "user_id", null: false
+    t.bigint "role_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["event_id", "user_id"], name: "idx_responsible_people_on_event_user", unique: true
+    t.index ["event_id"], name: "index_responsible_people_on_event_id"
+    t.index ["role_id"], name: "index_responsible_people_on_role_id"
+    t.index ["user_id"], name: "index_responsible_people_on_user_id"
+  end
+
   create_table "role_permissions", force: :cascade do |t|
     t.bigint "role_id", null: false
     t.bigint "permission_id", null: false
@@ -125,11 +172,18 @@ ActiveRecord::Schema.define(version: 2025_12_09_094702) do
     t.index ["current_role_id"], name: "index_users_on_current_role_id"
   end
 
+  add_foreign_key "directions", "departments"
+  add_foreign_key "events", "directions"
+  add_foreign_key "events", "educational_organizations"
+  add_foreign_key "events", "event_levels"
   add_foreign_key "events", "users", column: "creator_id"
   add_foreign_key "plan_events", "approved_event_departments", column: "event_department_id"
   add_foreign_key "plan_events", "plans"
   add_foreign_key "plans", "departments"
   add_foreign_key "plans", "users", column: "creator_id"
+  add_foreign_key "responsible_people", "events"
+  add_foreign_key "responsible_people", "roles"
+  add_foreign_key "responsible_people", "users"
   add_foreign_key "role_permissions", "permissions"
   add_foreign_key "role_permissions", "roles"
   add_foreign_key "roles", "departments"

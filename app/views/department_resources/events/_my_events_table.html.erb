@@ -3,8 +3,12 @@
   <thead>
     <tr>
       <th class="center aligned">ID</th>
-      <th class="center aligned">Период проведения</th>
       <th>Название</th>
+      <th>Наименование ООВО</th>
+      <th>Уровень</th>
+      <th>Формат</th>
+      <th>Направление</th>
+      <th class="center aligned">Период проведения</th>
       <th>Описание</th>
       <th>Статусы подразделений</th>
       <th class="center aligned">Всего участников</th>
@@ -17,6 +21,12 @@
     <% events.each do |event| %>
       <tr>
         <td class="center aligned"><%= event.id %></td>
+        <td><strong><%= event.title %></strong></td>
+        <td><strong><%= event.educational_organization.name %></strong></td>
+        <td><strong><%= event.level.name %></strong></td>
+        <td><strong><%= event.format %></strong></td>
+        <td><%= format_direction(event.direction) %></td>
+        
         <td class="center aligned">
           <%= format_event_period(event.start_date, event.end_date) %>
           <% if event.ongoing? %>
@@ -27,7 +37,6 @@
             <div class="ui grey horizontal label">Завершено</div>
           <% end %>
         </td>
-        <td><strong><%= event.title %></strong></td>
         <td><%= truncate(event.description, length: 100) %></td>
         <td>
           <div class="ui small labels">
@@ -61,22 +70,3 @@
     <% end %>
   </tbody>
 </table>
-
-<%# Хелперы для статусов %>
-<% def ed_status_class(status) %>
-  <% case status %>
-  <% when 'approved' then 'green' %>
-  <% when 'offered' then 'yellow' %>
-  <% when 'rejected' then 'red' %>
-  <% else 'grey' %>
-  <% end %>
-<% end %>
-
-<% def ed_status_text(status) %>
-  <% case status %>
-  <% when 'approved' then '✓' %>
-  <% when 'offered' then '?' %>
-  <% when 'rejected' then '✗' %>
-  <% else '-' %>
-  <% end %>
-<% end %>

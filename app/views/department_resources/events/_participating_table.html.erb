@@ -1,20 +1,22 @@
 <table class="ui celled table">
   <thead>
     <tr>
-      <th class="center aligned" style="width: 50px;">
+      <th class="center aligned" style="padding: 5px 5px;">
         <div class="ui checkbox">
           <input type="checkbox" id="selectAllCheckbox">
-          <label></label>
         </div>
       </th>
       <th class="center aligned">ID</th>
-      <th class="center aligned">Период проведения</th>
       <th>Название</th>
+      <th>Наименование ООВО</th>
+      <th>Уровень</th>
+      <th>Формат</th>
+      <th>Направление</th>
+      <th class="center aligned">Период проведения</th>
       <th>Описание</th>
       <th class="center aligned">Наши участники</th>
       <th class="center aligned">Всего участников</th>
       <th class="center aligned">Утверждено</th>
-      <th class="center aligned">Статус</th>
       <th class="center aligned">Действия</th>
     </tr>
   </thead>
@@ -22,21 +24,24 @@
   <tbody>
     <% event_departments.each do |ed| %>
       <tr>
-        <td class="center aligned">
+        <td class="center aligned" style="padding: 5px 5px;">
           <% if ed %>
             <div class="ui checkbox">
               <input type="checkbox" 
-       class="event-checkbox" 
-       value="<%= ed.id %>" 
-       data-event-title="<%= ed.event.title %>"
-       data-event-start-date="<%= ed.event.start_date.strftime('%Y-%m-%d') %>"
-       data-event-department-id="<%= ed.department.id %>">
-              <label></label>
+                class="event-checkbox" 
+                value="<%= ed.id %>" 
+                data-event-title="<%= ed.event.title %>"
+                data-event-start-date="<%= ed.event.start_date.strftime('%Y-%m-%d') %>"
+                data-event-department-id="<%= ed.department.id %>">
             </div>
           <% end %>
         </td>
         <td class="center aligned"><%= ed.event.id %></td>
-        
+        <td><strong><%= ed.event.title %></strong></td>
+        <td><strong><%= ed.event.educational_organization.name %></strong></td>
+        <td><strong><%= ed.event.level.name %></strong></td>
+        <td><strong><%= ed.event.format %></strong></td>
+        <td><%= format_direction(ed.event.direction) %></td>
         <td class="center aligned">
           <%= format_event_period(ed.event.start_date, ed.event.end_date) %>
           <% if ed.event.ongoing? %>
@@ -47,7 +52,6 @@
             <div class="ui grey horizontal label">Завершено</div>
           <% end %>
         </td>
-        <td><%= ed.event.title %></td>
         <td><%= truncate(ed.event.description, length: 80) %></td>
         <td class="center aligned">
         <div class="ui teal circular label">
@@ -60,13 +64,8 @@
           </div>
         </td>
         <td class="center aligned">
-          <% if ed%>
-            <%= ed.created_at.strftime('%d.%m.%Y') %>
-            <%= ed.approved_by.full_name %> 
-          <% end %>
-        </td>
-        <td class="center aligned">
-          <%= render_event_status(ed.event, ed.department) %>
+          <%= ed.created_at.strftime('%d.%m.%Y') %>
+          <%= ed.approved_by.full_name %> 
         </td>
         <td class="center aligned">
           <%= render_event_buttons(ed) %>

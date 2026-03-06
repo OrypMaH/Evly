@@ -1,41 +1,191 @@
-
-<%= form_with model: @event, local: true, class: "ui form" do |form| %>
-  <% if @event.errors.any? %>
+<%= form_with model: event, local: true, class: "ui form event-form", id: "eventForm" do |form| %>
+  <% if event.errors.any? %>
     <div class="ui error message">
-      <ul>
-        <% @event.errors.full_messages.each do |message| %>
+      <div class="header">Ошибки при сохранении:</div>
+      <ul class="list">
+        <% event.errors.full_messages.each do |message| %>
           <li><%= message %></li>
         <% end %>
       </ul>
     </div>
   <% end %>
 
-  <div class="field">
+  <div class="field <%= 'error' if event.errors[:title].any? %>">
     <%= form.label :title, "Название мероприятия" %>
-    <%= form.text_field :title, placeholder: "Введите название" %>
+    <%= form.text_field :title, 
+          placeholder: "Введите название мероприятия",
+          class: 'ui input' %>
+    <% if event.errors[:title].any? %>
+      <div class="ui pointing red basic label">
+        <%= event.errors[:title].join(', ') %>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="field <%= 'error' if event.errors[:educational_organization].any? %>">
+    <%= form.label :educational_organization_id, "Образовательная организация" %>
+    
+    <div class="ui action input">
+      <%= form.collection_select :educational_organization_id, 
+            EducationalOrganization.all, 
+            :id, :name, 
+            { include_blank: "Выберете образовательную организацию" },
+            { class: "ui dropdown", id: "educational_organization_select" } %>
+      
+      <button type="button" 
+              class="ui primary icon button" 
+              id="new_educational_organization_btn"
+              data-tooltip="Добавить новую организацию"
+              data-position="top center">
+        <i class="plus icon"></i>
+      </button>
+    </div>
+    
   </div>
   
-  <div class="field">
+  <div class="field <%= 'error' if event.errors[:description].any? %>">
     <%= form.label :description, "Описание" %>
-    <%= form.text_area :description, rows: 4, placeholder: "Описание мероприятия" %>
+    <%= form.text_area :description, 
+          rows: 4, 
+          placeholder: "Подробное описание мероприятия, цели, задачи...",
+          class: 'ui textarea' %>
   </div>
   
   <div class="two fields">
-    <div class="field">
-      <%= form.label :start_date, "Дата и время начала" %>
-      <%= form.datetime_field :start_date, 
-            value: @event.start_date&.strftime('%Y-%m-%dT%H:%M'),
-            min: Date.today.strftime('%Y-%m-%d') %>
+    <div class="field <%= 'error' if event.errors[:event_level_id].any? %>">
+      <%= form.label :event_level_id, "Уровень мероприятия" %>
+      <%= form.collection_select :event_level_id, 
+            EventLevel.ordered, 
+            :id, :name, 
+            { include_blank: "Выберите уровень..." },
+            { class: "ui dropdown" } %>
+      <% if event.errors[:event_level_id].any? %>
+        <div class="ui pointing red basic label">
+          <%= event.errors[:event_level_id].join(', ') %>
+        </div>
+      <% end %>
     </div>
     
-    <div class="field">
-      <%= form.label :end_date, "Дата и время окончания" %>
-      <%= form.datetime_field :end_date, 
-            value: @event.end_date&.strftime('%Y-%m-%dT%H:%M'),
-            min: @event.start_date&.strftime('%Y-%m-%dT%H:%M') || Date.today.strftime('%Y-%m-%d') %>
+    <div class="field <%= 'error' if event.errors[:format].any? %>">
+      <%= form.label :format, "Формат проведения" %>
+      <%= form.text_field :format, 
+            placeholder: "Например: очный, онлайн, гибридный",
+            class: 'ui input',
+            maxlength: 100 %>
+      <% if event.errors[:format].any? %>
+        <div class="ui pointing red basic label">
+          <%= event.errors[:format].join(', ') %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="field <%= 'error' if event.errors[:event_level_id].any? %>">
+    <%= form.label :direction_id, "Направление воспитательной работы" %>
+    <%= form.collection_select :direction_id, 
+          @directions, 
+          :id, :name, 
+          { include_blank: "Выберете направление воспитательной работы" },
+          { class: "ui dropdown" } %>
+    <% if event.errors[:direction_id].any? %>
+      <div class="ui pointing red basic label">
+        <%= event.errors[:direction_id].join(', ') %>
+      </div>
+    <% end %>
+  </div>
+  
+  <div class="field <%= 'error' if event.errors[:location].any? %>">
+    <%= form.label :location, "Место проведения" %>
+    <%= form.text_field :location, 
+          placeholder: "Например: актовый зал, онлайн-платформа, аудитория 301",
+          class: 'ui input',
+          maxlength: 200 %>
+    <% if event.errors[:location].any? %>
+      <div class="ui pointing red basic label">
+        <%= event.errors[:location].join(', ') %>
+      </div>
+    <% end %>
+  </div>
+  
+  <div class="field">
+    <label>Ответственные лица</label>
+    <div id="responsible-people">
+      <%= form.fields_for :responsible_people do |rp_form| %>
+        <%= render 'responsible_person_fields', form: rp_form %>
+      <% end %>
+    </div>
+    
+    <div class="ui divider"></div>
+    
+    <%= link_to_add_association 'Добавить ответственное лицо', form, :responsible_people,
+          partial: 'responsible_person_fields',
+          class: 'ui basic button',
+          data: { association_insertion_node: '#responsible-people', 
+                  association_insertion_method: 'append' } %>
+  </div>
+
+  <div class="two fields">
+    <div class="field <%= 'error' if event.errors[:start_date].any? %>">
+      <%= form.label :start_date, "Дата и время начала" %>
+      <div class="ui calendar" id="startDatePicker">
+        <div class="ui input left icon">
+          <i class="calendar icon"></i>
+          <%= form.datetime_field :start_date, 
+                value: event.start_date&.strftime('%Y-%m-%dT%H:%M'),
+                class: 'ui input',
+                placeholder: "Выберите дату и время" %>
+        </div>
+      </div>
+      <% if event.errors[:start_date].any? %>
+        <div class="ui pointing red basic label">
+          <%= event.errors[:start_date].join(', ') %>
+        </div>
+      <% end %>
+    </div>
+    
+    <div class="field <%= 'error' if event.errors[:end_date].any? %>">
+      <%= form.label :end_date, "Дата и время окончания " %>
+      <div class="ui calendar" id="endDatePicker">
+        <div class="ui input left icon">
+          <i class="calendar icon"></i>
+          <%= form.datetime_field :end_date, 
+                value: event.end_date&.strftime('%Y-%m-%dT%H:%M'),
+                class: 'ui input',
+                placeholder: "Выберите дату и время" %>
+        </div>
+      </div>
+      <% if event.errors[:end_date].any? %>
+        <div class="ui pointing red basic label">
+          <%= event.errors[:end_date].join(', ') %>
+        </div>
+      <% end %>
     </div>
   </div>
   
-  <%= form.submit "Сохранить", class: "ui primary button" %>
-  <%= link_to "Отмена", stored_referer, class: "ui button" %>
+  <% if event.errors[:end_date].any? && event.errors[:end_date].include?("должна быть после даты начала") %>
+    <div class="ui warning message">
+      <i class="info circle icon"></i>
+      <div class="content">
+        <div class="header">Внимание!</div>
+        <p>Если дата окончания будет раньше даты начала, система автоматически поменяет их местами.</p>
+      </div>
+    </div>
+  <% end %>
+  
+  <div class="ui segment">
+    <div class="ui buttons">
+      <% if event.persisted? %>
+        <%= form.submit "Обновить мероприятие", class: "ui primary button" %>
+        <%= link_to "Отмена", event_path(event), class: "ui button" %>
+      <% else %>
+        <%= form.submit "Создать мероприятие", class: "ui primary button" %>
+        <%= link_to "Отмена", events_path, class: "ui button" %>
+      <% end %>
+    </div>
+  </div>
 <% end %>
+
+<% content_for :javascript_packs do %>
+  <%= javascript_pack_tag 'events_form' %>
+<% end %>
+<%= render 'new_educational_organization_modal' %>

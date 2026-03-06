@@ -1,8 +1,8 @@
 # app/controllers/plans/plan_events_controller.rb
-module Plans
   class PlanEventsController < ApplicationController
-    before_action :set_plan
+    before_action :set_plan , except: [:destroy]
     before_action :set_plan_event, only: [:destroy]
+    before_action :store_referer, only:[:destroy]
     before_action :check_permissions
     
     def create
@@ -27,78 +27,71 @@ module Plans
     end
     
     def destroy
-      @plan_event.destroy
-      redirect_back fallback_location: plan_path(@plan),
-                    notice: "Мероприятие удалено из плана"
+      event_title = @plan_event.event_department.event.title
+      
+      if @plan_event.destroy
+        redirect_to stored_referer, notice: "Мероприятие '#{event_title}' удалено из плана"
+      else
+        redirect_to stored_referer, alert: "Не удалось удалить мероприятие из плана"
+      end
     end
-    
-    # app/controllers/plans_controller.rb
-    def available_plans_for_events
-      # Получаем список ID предложенных мероприятий
-      offered_event_department_ids = Array(params[:offered_event_department_ids]).map(&:to_i)
+
+    def bulk_create
+      event_department_ids = Array(params[:event_department_ids]).map(&:to_i)
       
-      if offered_event_department_ids.empty?
-        return render json: { error: "Не переданы ID мероприятий" }, status: :bad_request
+      if event_department_ids.empty?
+        return render json: { error: "Не выбраны мероприятия" }, status: :bad_request
       end
       
-      # Находим все предложенные мероприятия
-      offered_events = OfferedEventDepartment.includes(:event, :department)
-                                            .where(id: offered_event_department_ids)
+      added_count = 0
+      errors = []
       
-      if offered_events.empty?
-        return render json: { error: "Мероприятия не найдены" }, status: :not_found
+      event_department_ids.each do |event_department_id|
+        event_department = ApprovedEventDepartment.find_by(id: event_department_id)
+        
+        unless event_department
+          errors << "Мероприятие #{event_department_id} не найдено"
+          next
+        end
+        
+        plan_event = @plan.plan_events.build(event_department: event_department)
+        begin
+          
+          unless can?(:create, plan_event)
+            errors << "Нет прав на добавление этого мероприятия"
+            next
+          end
+          # Проверка принадлежности к одной кафедре
+          if event_department.department != @plan.department
+            errors << "Мероприятие из другого подразделения"
+            next
+          end
+          
+          # Проверка дублирования
+          if @plan.plan_events.exists?(event_department_id: event_department_id)
+            errors << "Мероприятие уже в плане"
+            next
+          end
+          
+          # Создание связи
+          plan_event.save!
+          added_count += 1
+        end
       end
-      
-      # Проверяем что все мероприятия из одного подразделения
-      departments = offered_events.map(&:department).uniq
-      if departments.count > 1
-        return render json: { 
-          error: "Мероприятия принадлежат разным подразделениям",
-          departments: departments.map(&:name) 
-        }, status: :bad_request
+      if added_count > 0
+        render json: { 
+          success: true, 
+          added_count: added_count,
+          errors: errors
+        }
+      else
+        render json: { 
+          success: false, 
+          errors: errors 
+        }, status: :unprocessable_entity
       end
-      
-      target_department = departments.first
-      
-      # Проверяем права пользователя на это подразделение
-      unless can_access_department_plans?(current_user, target_department)
-        return render json: { 
-          error: "Нет доступа к планам подразделения #{target_department.name}" 
-        }, status: :forbidden
-      end
-      
-      # Рассчитываем охватывающий период (по датам начала мероприятий)
-      event_dates = offered_events.map { |oe| oe.event.start_date }
-      min_date = event_dates.min
-      max_date = event_dates.max
-      
-      # Находим планы подразделения, охватывающие этот период
-      # План считается охватывающим период, если его start_date <= min_date и end_date >= max_date
-      available_plans = Plan.for_department(target_department)
-                            .where('start_date <= ? AND end_date >= ?', min_date, max_date)
-                            .order(created_at: :desc)
-      
-      # Также можно показать планы, которые хотя бы частично пересекаются с периодом
-      overlapping_plans = Plan.for_department(target_department)
-                              .where('start_date <= ? AND end_date >= ?', max_date, min_date)
-                              .where.not(id: available_plans.select(:id))
-                              .order(created_at: :desc)
-      
-      render json: {
-        department: {
-          id: target_department.id,
-          name: target_department.name
-        },
-        period: {
-          min_date: min_date.strftime('%d.%m.%Y'),
-          max_date: max_date.strftime('%d.%m.%Y'),
-          days: (max_date.to_date - min_date.to_date).to_i
-        },
-        plans: available_plans.map { |plan| format_plan_for_json(plan, :full_coverage) },
-        overlapping_plans: overlapping_plans.map { |plan| format_plan_for_json(plan, :partial_coverage) },
-        selected_events_count: offered_events.count
-      }
     end
+  
 
     private
 
@@ -147,16 +140,16 @@ module Plans
     end
     
     def set_plan_event
-      @plan_event = @plan.plan_events.find(params[:id])
+      @plan_event = PlanEvent.find(params[:id])
+      @plan = @plan_event.plan
     end
     
     def check_permissions
       case action_name.to_sym
       when :create
-        authorize_action(:add_event, @plan)
+        authorize_action(:add_event, @plan.department)
       when :destroy
-        authorize_action(:remove_event, @plan)
+        authorize_action(:remove_event, @plan.department)
       end
     end
   end
-end

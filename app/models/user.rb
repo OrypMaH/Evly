@@ -3,7 +3,12 @@ class User < ApplicationRecord
   has_many :user_roles, 
         dependent: :destroy
   has_many :roles, 
-        through: :user_roles
+        through: :user_roles   
+  has_many :responsible_for_events, 
+        class_name: 'ResponsiblePerson'
+  has_many :events_as_responsible, 
+        through: :responsible_for_events, 
+        source: :event
   belongs_to :current_role, 
         class_name: 'Role', 
         optional: true
@@ -63,6 +68,4 @@ class User < ApplicationRecord
       errors.add(:current_role_id, "должна быть среди назначенных пользователю ролей")
     end
   end
-  
-  
 end

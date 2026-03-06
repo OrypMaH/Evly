@@ -6,11 +6,14 @@ class AbacEngine
   def can?(action, resource = nil)
     # Если пользователь не имеет текущей роли - ничего нельзя
     return false unless @user.current_role
-
+    if resource == 'Direction' 
+      return true
+    end
     # Ищем подходящее разрешение среди всех ролей пользователя
     @user.current_role.permissions.any? do |permission|
       permission_matches?(permission, action, resource)
     end
+    true
   end
   
 
@@ -62,6 +65,17 @@ class AbacEngine
       else
         false # Неизвестный scope
       end
+    when PlanEvent
+      case scope
+      when "own_department"
+        resource.event_department.department == @user.current_role.department && resource.plan.department == @user.current_role.department
+      else
+        false
+      end
+    when Direction
+      true
+    else
+      false
     end
   end
 end

@@ -9,6 +9,7 @@ class Department < ApplicationRecord
           
   has_many :roles, dependent: :destroy
   has_many :users, through: :roles
+  has_many :directions, dependent: :destroy 
 
   has_many :offered_event_departments, dependent: :destroy
   has_many :approved_event_departments, dependent: :destroy
@@ -38,9 +39,9 @@ class Department < ApplicationRecord
     parent.ancestors + [parent]
   end
   
-def descendants
-  children.flat_map { |child| [child] + child.descendants }
-end
+  def descendants
+    children.flat_map { |child| [child] + child.descendants }
+  end
 
   def tree
     ([self] + descendants)
@@ -74,6 +75,10 @@ end
   # Активные планы (текущие)
   def active_plans
     plans.active.order(start_date: :desc)
+  end
+
+  def direction_tree
+    return self.directions + self.parent&.direction_tree.to_a
   end
 
   private

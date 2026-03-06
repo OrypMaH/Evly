@@ -160,18 +160,20 @@ export function initBulkAdd() {
     const maxStartDate = startDates.length > 0 ? 
       new Date(Math.max(...startDates)).toISOString().split('T')[0] : null;
     
-    fetch('/plans/available_for_events', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
-      },
-      body: JSON.stringify({
-        event_department_ids: eventDepartmentIds,
+      const params = new URLSearchParams({
+        for_bulk_add: 'true',
+        event_department_ids: eventDepartmentIds.join(','),
         min_start_date: minStartDate,
         max_start_date: maxStartDate
+      });
+
+      fetch(`/plans?${params}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+        }
       })
-    })
       .then(response => response.json())
       .then(data => {
         updatePlanSelect(data.plans);
@@ -272,12 +274,15 @@ export function initBulkAdd() {
       formData.append('event_department_ids[]', id);
     });
     
-    fetch(`/plans/${planId}/bulk_add_events`, {
+    fetch(`/plans/${planId}/plan_events/bulk_create`, {
       method: 'POST',
-      body: formData,
       headers: {
+        'Content-Type': 'application/json',
         'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
-      }
+      },
+      body: JSON.stringify({
+        event_department_ids: eventDepartmentIds
+      })
     })
     .then(response => {
       if (response.redirected) {

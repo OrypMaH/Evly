@@ -1,0 +1,26 @@
+<%# app/views/department_directions/_form.html.erb %>
+<%= form_with(model: [@department,@direction], 
+              local: true, 
+              html: { class: 'ui form' }) do |f| %>
+  <%= f.hidden_field :department_id, value: params[:department_id] %>
+  <div class="field <%= 'error' if @direction.errors[:name].any? %>">
+    <%= f.label :name, 'Название направления' %>
+    <%= f.text_field :name, placeholder: 'Введите название направления' %>
+  </div>
+  
+  <div class="field <%= 'error' if @direction.errors[:description].any? %>">
+    <%= f.label :description, 'Описание' %>
+    <%= f.text_area :description, 
+          rows: 6, 
+          placeholder: 'Опишите цели и задачи направления...' %>
+  </div>
+  
+  <div class="ui divider"></div>
+  
+  <div class="actions">
+    <%= f.submit 'Сохранить', class: 'ui primary button' %>
+    <%= link_to 'Отмена', 
+        @direction.persisted? ? direction_path(@direction) : department_directions_path(@department), 
+        class: 'ui button' %>
+  </div>
+<% end %>

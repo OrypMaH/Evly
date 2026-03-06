@@ -2,11 +2,16 @@
   <thead>
     <tr>
       <th class="center aligned">ID</th>
-      <th class="center aligned">Период проведения</th>
       <th>Название</th>
+      <th>Наименование ООВО</th>
+      <th>Уровень</th>
+      <th>Формат</th>
+      <th>Направление</th>
+      <th class="center aligned">Период проведения</th>
       <th>Описание</th>
-      <th class="center aligned">Предложено</th>
+      <th>Статусы подразделений</th>
       <th class="center aligned">Всего участников</th>
+      <th class="center aligned">Предложено</th>
       <th class="center aligned">Создатель</th>
       <th class="center aligned">Действия</th>
     </tr>
@@ -16,7 +21,12 @@
     <% event_departments.each do |ed| %>
       <tr>
         <td class="center aligned"><%= ed.event.id %></td>
-        
+        <td><strong><%= ed.event.title %></strong></td>
+        <td><strong><%= ed.event.educational_organization.name %></strong></td>
+        <td><strong><%= ed.event.level.name %></strong></td>
+        <td><strong><%= ed.event.format %></strong></td>
+        <td><%= format_direction(ed.event.direction) %></td>
+
         <td class="center aligned">
           <%= format_event_period(ed.event.start_date, ed.event.end_date) %>
           <% if ed.event.ongoing? %>
@@ -27,16 +37,33 @@
             <div class="ui grey horizontal label">Завершено</div>
           <% end %>
         </td>
-        <td><strong><%= ed.event.title %></strong></td>
-        <td><%= truncate(ed.event.description, length: 60) %></td>
-        <td class="center aligned">
-          <%= ed.created_at.strftime('%d.%m.%Y') if ed %>
-          <%= ed.proposed_by.full_name if ed %>
+        <td><%= truncate(ed.event.description, length: 100) %></td>
+        
+        <td>
+          <div class="ui small labels">
+            <% ed.event.event_departments.each do |eded| %>
+              <div class="ui <%= ed.status %> label">
+                <%= eded.department.name.truncate(10) %>
+                <div class="detail">
+                  <% if eded.status == 'approved' %>
+                    <%= eded.participants_count %>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+            <% if ed.event.event_departments.empty? %>
+              <span class="ui grey label">Нет участий</span>
+            <% end %>
+          </div>
         </td>
         <td class="center aligned">
           <div class="ui blue circular label">
             <%= ed.event.people %>
           </div>
+        </td>
+        <td class="center aligned">
+          <%= ed.created_at.strftime('%d.%m.%Y') if ed %>
+          <%= ed.proposed_by.full_name if ed %>
         </td>
         <td class="center aligned">
           <%= ed.event.creator.surname %> <%= ed.event.creator.name %>

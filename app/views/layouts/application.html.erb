@@ -47,6 +47,11 @@
                   <i class="sitemap icon"></i>
                   Подразделения
                 <% end %>
+
+                <%= link_to department_directions_path(current_user.department.id), class: 'item' do %>
+                  <i class="sitemap icon"></i>
+                  Направления ВР
+                <% end %>
                 
 
                 <div class="divider"></div>

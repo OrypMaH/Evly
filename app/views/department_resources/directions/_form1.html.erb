@@ -1,4 +1,4 @@
-<%= form_with model: plan, local: true, class: "ui form" do |form| %>
+<%= form_with model: [@department,plan], local: true, class: "ui form" do |form| %>
   <% if plan.errors.any? %>
     <div class="ui error message">
       <ul>
@@ -23,8 +23,7 @@
     <div class="field">
       <%= form.label :start_date, "Начало периода" %>
       <%= form.date_field :start_date, 
-            value: plan.start_date || Date.current,
-            min: Date.current %>
+            value: plan.start_date || Date.current %>
     </div>
     
     <div class="field">
@@ -46,5 +45,5 @@
   </div>
   
   <%= form.submit "Сохранить план", class: "ui primary button" %>
-  <%= link_to "Отмена", plans_path, class: "ui button" %>
+  <%= link_to "Отмена", department_plans_path(@department), class: "ui button" %>
 <% end %>

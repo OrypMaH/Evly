@@ -25,7 +25,7 @@ module PermissionsInheritanceHandler
     end
     def check_permissions_for_plan
       case action_name.to_sym
-      when :show
+      when :show, :index
         authorize_action(:show, @plan)
       when :new, :create
         authorize_action(:create, @plan)

@@ -22,13 +22,10 @@
     
     <div class="ui segment">
       <div class="ui buttons">
-        <%= link_to @plan, class: 'ui button' do %>
+        <%= link_to [@department,@plan], class: 'ui button' do %>
           <i class="arrow left icon"></i> Назад к плану
         <% end %>
-        <%= link_to events_plan_path(@plan), class: 'ui button' do %>
-          <i class="calendar icon"></i> Управление мероприятиями
-        <% end %>
-        <%= link_to plans_path, class: 'ui button' do %>
+        <%= link_to department_plans_path(@department), class: 'ui button' do %>
           <i class="list icon"></i> К списку планов
         <% end %>
       </div>

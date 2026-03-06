@@ -151,6 +151,33 @@ namespace :permissions do
     end
   end
 
+  task planevent: :environment do
+    core_role = Role.find_by!(
+      id: "1"
+    )
+    permissions_to_remove = [
+      { action: "create", resource: "PlanEvent", scope: "own_departments" }
+    ]
+    
+    # Удаляем старые разрешения
+    permissions_to_remove.each do |perm_attrs|
+      permission = Permission.find_by(perm_attrs)
+      if permission && core_role.permissions.include?(permission)
+        permission.destroy
+        puts "Удалено разрешение: #{perm_attrs[:action]} #{perm_attrs[:resource]} (#{perm_attrs[:scope]})"
+        
+      else
+        puts "Разрешение не найдено: #{perm_attrs[:action]} #{perm_attrs[:resource]} (#{perm_attrs[:scope]})"
+      end
+    end
+    permissions = [
+      { action: "create", resource: "PlanEvent", scope: "own_department" }
+    ]
+    permissions.each do |perm|
+      core_role.permissions << Permission.find_or_create_by!(perm)
+    end
+  end
+
   task event_permissions: :environment do
     puts "Обновление разрешений для мероприятий..."
     

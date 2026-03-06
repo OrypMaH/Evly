@@ -18,7 +18,8 @@ class EventsController < ApplicationController
   def edit
       authorize_action(:edit, @event)
   end
-
+  def show
+  end
   def update
       if abac_engine.can?(:update, @event)
         if @event.update event_params
@@ -33,7 +34,8 @@ class EventsController < ApplicationController
   end
 
   def new
-      @event = Event.new()
+      @event = Event.new(educational_organization: EducationalOrganization.first())
+      @directions = current_department.direction_tree
       authorize_action(:create, @event)
   end
 
@@ -130,11 +132,7 @@ class EventsController < ApplicationController
     
     { successful: successful, errors: errors }
   end
-
-  def can_offer_to_department?(event, department)
-    temp_ed = OfferedEventDepartment.new(event: event, department: department)
-    can?(:offer, temp_ed)
-  end
+  #???
   def can_offer_to_department?(event, department)
     temp_ed = OfferedEventDepartment.new(event: event, department: department)
     can?(:offer, temp_ed)
@@ -144,7 +142,20 @@ class EventsController < ApplicationController
   end
 
   def event_params
-      params.require(:event).permit(:title,:description, :start_date, :end_date)
+      params.require(:event).permit(
+        :title, 
+        :description, 
+        :start_date, 
+        :end_date, 
+        :format, 
+        :location, 
+        :event_level_id, 
+        :direction_id, 
+        :educational_organization_id,
+        responsible_people_attributes: [
+          :id, :user_id, :role_id, :_destroy
+        ]
+      )
   end
 
   def can_offer_to_department?(event, department)

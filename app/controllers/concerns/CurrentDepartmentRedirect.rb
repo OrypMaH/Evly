@@ -12,7 +12,7 @@ module CurrentDepartmentRedirect
       
       # Получаем параметры из пути через Rails router
       route_params = Rails.application.routes.recognize_path(uri.path)
-      
+      puts "CONTROLLER: #{route_params[:controller]}"
       # Получаем query параметры
       query_params = uri.query ? Rack::Utils.parse_query(uri.query) : {}
       
@@ -41,10 +41,11 @@ module CurrentDepartmentRedirect
   
   def route_requires_department?(route_params)
     department_dependent_routes = [
-      {controller: 'events', action: 'index'},
-      {controller: 'plans', action: 'index'},
-      {controller: 'roles', action: 'index'},
-      {controller: 'users', action: 'index'}
+      {controller: 'department_resources/events', action: 'index'},
+      {controller: 'department_resources/plans', action: 'index'},
+      {controller: 'department_resources/roles', action: 'index'},
+      {controller: 'department_resources/users', action: 'index'},
+      {controller: 'department_resources/directions', action: 'index'}
     ]
     
     department_dependent_routes.any? do |route|

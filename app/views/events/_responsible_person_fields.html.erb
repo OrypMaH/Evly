@@ -1,0 +1,45 @@
+
+<div class="ui segment responsible-person-fields">
+  <div class="ui grid">
+    <div class="eleven wide column">
+      <div class="field">
+        <label>Пользователь</label>
+        <%= f.collection_select :user_id, 
+              User.all.order(:last_name, :first_name), 
+              :id, 
+              :full_name, 
+              { include_blank: "Выберете пользователя" },
+              { class: "ui search dropdown user-select", 
+                data: { role_target: "responsible_person_#{f.index}" } } %>
+      </div>
+    </div>
+    
+    <div class="four wide column">
+      <div class="field">
+        <label>Должность</label>
+        <%= f.grouped_collection_select :role_id, 
+              User.all, 
+              :roles, 
+              :full_name, 
+              :id, 
+              :name, 
+              { include_blank: "Выберете должность" },
+              { class: "ui dropdown role-select", 
+                id: "responsible_person_#{f.index}_role" } %>
+      </div>
+    </div>
+    
+    <div class="one wide column">
+      <div class="field">
+        <label>&nbsp;</label>
+        <%= f.hidden_field :_destroy %>
+        <button type="button" 
+                class="ui icon button remove-responsible-person"
+                data-tooltip="Удалить ответственное лицо"
+                data-position="top center">
+          <i class="trash red icon"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -89,7 +89,7 @@ module EventsHelper
       content_tag(:i, '', class: 'eye icon')
     end
   end
-
+  
   def get_offered_event_actions(event_department,buttons)
     get_basic_event_actions(event_department.event,buttons)
     if can?(:approve, event_department)

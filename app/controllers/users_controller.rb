@@ -97,25 +97,4 @@ class UsersController < ApplicationController
         end
     end
     private
-    def redirect_with_updated_department(referer, department_id)
-        return root_path unless referer
-        
-        begin
-            uri = URI.parse(referer)
-            path = uri.path
-            
-                if path.match?(%r{^/departments/\d+/})
-                    # Заменяем ID в пути
-                    new_path = path.gsub(%r{^/departments/\d+}, "/departments/#{department_id}")
-                    uri.path = new_path
-                    return uri.to_s
-                end
-            
-            uri.to_s
-        rescue URI::InvalidURIError
-            referer
-        end
-    end
-
-# Использование:
 end

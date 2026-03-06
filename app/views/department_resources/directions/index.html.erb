@@ -1,0 +1,81 @@
+<%# app/views/department_directions/index.html.erb %>
+<div class="ui container">
+  <div class="ui segment">
+    <h1 class="ui header">
+      <i class="compass icon"></i>
+      <div class="content">
+        Направления воспитательной работы
+        <div class="sub header">
+          Подразделение: <%= @department.name %>
+          <% if @department.parent %>
+            (входит в <%= @department.parent.name %>)
+          <% end %>
+        </div>
+      </div>
+    </h1>
+    <% if can?(:create, Direction.new) %>
+      <%= link_to 'Создать направление', 
+          new_department_direction_path(@department), 
+          class: "ui primary button" %>
+    <% end %>
+    
+    <div class="ui divider"></div>
+    
+    <% if @directions.empty? %>
+      <div class="ui placeholder segment">
+        <div class="ui icon header">
+          <i class="compass outline icon"></i>
+          Нет созданных направлений
+        </div>
+        <% if can?(:create, Direction.new) %>
+          <%= link_to 'Создать первое направление', 
+              new_department_direction_path(@department), 
+              class: "ui primary button" %>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="ui three stackable cards">
+        <% @directions.each do |direction| %>
+          <div class="ui card">
+            <div class="content">
+              <div class="header">
+                <%= direction.name %>
+              </div>
+              <div class="meta">
+                <span class="date">Создано: <%= direction.created_at %></span>
+              </div>
+              <div class="description">
+                <% if direction.description.present? %>
+                  <p><%= simple_format(truncate(direction.description, length: 150)) %></p>
+                <% else %>
+                  <p class="ui grey text">Описание отсутствует</p>
+                <% end %>
+              </div>
+            </div>
+            <%= render_direction_actions(direction)%>
+            <div class="extra content">
+              <% event_count = direction.events.count %>
+              <% if event_count > 0 %>
+                <div class="ui tiny green label">
+                  <i class="calendar check icon"></i>
+                  <%= event_count %> 
+                </div>
+              <% else %>
+                <div class="ui tiny grey label">
+                  <i class="calendar times icon"></i>
+                  Нет мероприятий
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+    
+    <div class="ui divider"></div>
+    
+    <div class="ui buttons">
+      <%= link_to 'Назад к подразделению', department_path(@department), class: "ui button" %>
+    </div>
+  </div>
+</div>
