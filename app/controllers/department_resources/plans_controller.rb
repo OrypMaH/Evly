@@ -51,6 +51,7 @@ module DepartmentResources
                 render :edit
             end
         end
+        
         private
         def set_plan
             @plan = Plan.find(params[:id])

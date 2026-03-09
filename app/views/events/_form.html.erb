@@ -1,4 +1,5 @@
 <%= form_with model: event, local: true, class: "ui form event-form", id: "eventForm" do |form| %>
+    <%= form.hidden_field :id, id: 'event_id', value: event.id || 'new' %>
   <% if event.errors.any? %>
     <div class="ui error message">
       <div class="header">Ошибки при сохранении:</div>
@@ -9,7 +10,7 @@
       </ul>
     </div>
   <% end %>
-
+          
   <div class="field <%= 'error' if event.errors[:title].any? %>">
     <%= form.label :title, "Название мероприятия" %>
     <%= form.text_field :title, 
@@ -80,19 +81,7 @@
     </div>
   </div>
 
-  <div class="field <%= 'error' if event.errors[:event_level_id].any? %>">
-    <%= form.label :direction_id, "Направление воспитательной работы" %>
-    <%= form.collection_select :direction_id, 
-          @directions, 
-          :id, :name, 
-          { include_blank: "Выберете направление воспитательной работы" },
-          { class: "ui dropdown" } %>
-    <% if event.errors[:direction_id].any? %>
-      <div class="ui pointing red basic label">
-        <%= event.errors[:direction_id].join(', ') %>
-      </div>
-    <% end %>
-  </div>
+   <%= render 'direction_field', form: form, event: event%>
   
   <div class="field <%= 'error' if event.errors[:location].any? %>">
     <%= form.label :location, "Место проведения" %>
@@ -109,19 +98,93 @@
   
   <div class="field">
     <label>Ответственные лица</label>
-    <div id="responsible-people">
-      <%= form.fields_for :responsible_people do |rp_form| %>
-        <%= render 'responsible_person_fields', form: rp_form %>
+    
+    <!-- Контейнер для существующих и новых ответственных лиц -->
+    <div id="responsible-people-list" class="ui segment">
+      <div class="ui grid">
+        <div class="ten wide column">
+          <h4 class="ui header">Назначенные ответственные лица</h4>
+        </div>
+        <div class="six wide column right aligned">
+          <button type="button" 
+                  id="show-add-form-btn" 
+                  class="ui primary button">
+            <i class="plus icon"></i> Добавить ответственное лицо
+          </button>
+        </div>
+      </div>
+      
+      <!-- Список уже добавленных -->
+      <div id="responsible-people-items" class="ui relaxed divided list">
+        <%= form.fields_for :responsible_people do |rp_form| %>
+          <%= render 'responsible_person_fields', f: rp_form %>
+        <% end %>
+      </div>
+      
+      <!-- Сообщение, если нет ответственных лиц -->
+      <% if event.responsible_people.empty? %>
+        <div id="no-responsible-message" class="ui placeholder segment">
+          <div class="ui icon header">
+            <i class="user circle icon"></i>
+            Нет назначенных ответственных лиц
+          </div>
+        </div>
       <% end %>
+      
+      <!-- Форма для быстрого добавления (изначально скрыта) -->
+      <div id="quick-add-form" class="ui segment" style="display: none; margin-top: 20px;">
+        <h5 class="ui header">Быстрое добавление ответственного лица</h5>
+        
+        <div class="ui form">
+          <div class="two fields">
+            <!-- Поиск пользователя -->
+            <div class="field">
+              <label>Пользователь</label>
+              <div class="ui search" id="inline-user-search">
+                <div class="ui icon input" style="width: 100%;">
+                  <input type="text" 
+                         id="inline-user-search-input" 
+                         class="prompt" 
+                         placeholder="Введите имя...">
+                  <i class="search icon"></i>
+                </div>
+                <div class="results"></div>
+              </div>
+            </div>
+            
+            <!-- Выбор должности -->
+            <div class="field">
+              <label>Должность</label>
+              <select id="inline-role-select" class="ui dropdown" disabled>
+                <option value="">Сначала выберите пользователя</option>
+              </select>
+            </div>
+          </div>
+          
+          <!-- Кнопки действий -->
+          <div class="ui buttons">
+            <button type="button" 
+                    id="confirm-inline-add" 
+                    class="ui primary button" 
+                    disabled>
+              <i class="check icon"></i> Добавить
+            </button>
+            <button type="button" 
+                    id="cancel-inline-add" 
+                    class="ui button">
+              Отмена
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
     
-    <div class="ui divider"></div>
-    
-    <%= link_to_add_association 'Добавить ответственное лицо', form, :responsible_people,
-          partial: 'responsible_person_fields',
-          class: 'ui basic button',
-          data: { association_insertion_node: '#responsible-people', 
-                  association_insertion_method: 'append' } %>
+    <!-- Шаблон для нового ответственного лица (скрыт) -->
+    <template id="new-responsible-person-template">
+      <%= form.fields_for :responsible_people, ResponsiblePerson.new, child_index: 'NEW_RECORD' do |rp_form| %>
+        <%= render 'responsible_person_fields', f: rp_form %>
+      <% end %>
+    </template>
   </div>
 
   <div class="two fields">
@@ -186,6 +249,30 @@
 <% end %>
 
 <% content_for :javascript_packs do %>
+  <%= javascript_pack_tag 'responsible_persons' %>
   <%= javascript_pack_tag 'events_form' %>
 <% end %>
 <%= render 'new_educational_organization_modal' %>
+
+<template id="responsible-person-template">
+  <div class="item" data-user-id="" data-role-id="">
+    <div class="right floated content">
+      <input type="hidden" name="event[responsible_people_attributes][__INDEX__][user_id]" class="user-id-field">
+      <input type="hidden" name="event[responsible_people_attributes][__INDEX__][role_id]" class="role-id-field">
+      <input type="hidden" name="event[responsible_people_attributes][__INDEX__][_destroy]" class="destroy-flag" value="">
+      <button type="button" class="ui basic red icon button remove-responsible-btn">
+        <i class="trash icon"></i>
+      </button>
+    </div>
+    <i class="user circle large icon"></i>
+    <div class="content">
+      <div class="header"></div>
+      <div class="description">
+        <span class="ui tiny label">
+          <i class="suitcase icon"></i>
+          <span class="role-name"></span>
+        </span>
+      </div>
+    </div>
+  </div>
+</template>

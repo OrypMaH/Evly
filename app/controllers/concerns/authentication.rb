@@ -7,7 +7,7 @@ module Authentication
         end
 
         def current_department
-            @current_department = @current_user.department
+            @current_department = @current_user&.department || current_user.department
         end
 
         def user_signed_in?

@@ -114,7 +114,12 @@
                   <i class="edit icon"></i>
                 <% end %>
               <% end %>
-              
+              <%= link_to export_excel_plan_path(plan, format: :xlsx), 
+                    class: "ui green button",
+                    data: { turbolinks: false } do %>
+                <i class="file excel icon"></i>
+                Скачать Excel
+              <% end %>
               <% if can?(:delete, plan) %>
                 <%= link_to plan_path( plan), 
                       method: :delete,

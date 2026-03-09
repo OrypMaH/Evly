@@ -36,6 +36,13 @@ class User < ApplicationRecord
     parts = [surname, name, patronymic].compact
     parts.any? ? parts.join(' ') : 'Не указано'
   end
+  def short_name
+    parts = [surname]
+    parts << "#{name[0]}." if name.present?
+    parts << "#{patronymic[0]}." if patronymic.present?
+
+    parts.any? ? parts.join(' ') : 'Не указано'
+  end
   
   def current_role_name
     current_role&.name
@@ -56,6 +63,14 @@ class User < ApplicationRecord
       new_current_role = roles.any? ? roles.first : nil
       update(current_role: new_current_role)
     end
+  end
+  def direction_list
+      result = []
+      roles.each do |role|
+          next unless role.department
+          result.concat(role.department.direction_tree)
+      end
+      result.uniq
   end
   private
 

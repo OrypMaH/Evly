@@ -1,6 +1,5 @@
 class EventsController < ApplicationController
- 
-  before_action :set_event, only: [:show, :edit, :update, :destroy]
+  before_action :set_event, only: [:show, :edit, :update, :destroy,:available_departments, :add_responsible_person]
   before_action :authenticate_user!
   before_action :store_referer, only: [:new, :edit, :destroy, :update, :show, :offer]
 
@@ -17,32 +16,44 @@ class EventsController < ApplicationController
 
   def edit
       authorize_action(:edit, @event)
+      @directions = current_user.direction_list
   end
   def show
+  end# app/controllers/events_controller.rb
+def update
+  if abac_engine.can?(:update, @event)
+    # Обновляем основные атрибуты мероприятия
+    if @event.update(event_params)
+      redirect_to stored_referer, notice: "Мероприятие обновлено"
+    else
+      redirect_to stored_referer, alert: "Что-то пошло не так: #{@event.errors.full_messages.join(', ')}"
+    end
+    
+  else
+    redirect_to stored_referer, alert: "Недостаточно прав для редактирования этого мероприятия"
   end
-  def update
-      if abac_engine.can?(:update, @event)
-        if @event.update event_params
-          redirect_to stored_referer, notice: "Мероприятие обновлено"
-        else
-          redirect_to stored_referer, alert: "Что-то пошло не так"
-        end
-        
-      else
-          redirect_to stored_referer, alert: "Недостаточно прав для редактирования этого мероприятия"
-      end
-  end
+end
 
   def new
       @event = Event.new(educational_organization: EducationalOrganization.first())
-      @directions = current_department.direction_tree
+      @directions = current_user.direction_list
       authorize_action(:create, @event)
   end
 
   def create
-      @event=Event.new event_params
+      @event = Event.new(event_params.except(:responsible_people_attributes))
       @event.creator=current_user
       authorize_action(:create, @event)
+      if params[:event][:responsible_people_attributes].present?
+        params[:event][:responsible_people_attributes].each do |_, rp_params|
+          next if rp_params[:_destroy] == '1'
+          
+          @event.responsible_people.build(
+            user_id: rp_params[:user_id],
+            role_id: rp_params[:role_id]
+          )
+        end
+      end
       if @event.save
           redirect_to stored_referer || department_events_path(current_user.department)
       else 
@@ -62,7 +73,6 @@ class EventsController < ApplicationController
   end
 
   def available_departments
-    @event = Event.find(params[:id])
     @available_departments = find_available_departments_for_action('offer')
     
     render json: { 
@@ -171,5 +181,16 @@ class EventsController < ApplicationController
   end
   def set_department
     @department = Department.find(params[:department_id])
+  end
+
+  def responsible_person_json(rp)
+    {
+      id: rp.id,
+      user_id: rp.user_id,
+      user_name: rp.user.full_name,
+      role_id: rp.role_id,
+      role_name: rp.role.name,
+      created_at: rp.created_at
+    }
   end
 end

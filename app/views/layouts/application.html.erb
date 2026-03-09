@@ -8,7 +8,7 @@
 
     <%= stylesheet_link_tag 'application', media: 'all', 'data-turbolinks-track': 'reload' %>
     <%= javascript_pack_tag 'application', 'data-turbolinks-track': 'reload' %>
-    <%= yield :javascript_packs %>
+
     
   </head>
 
@@ -140,5 +140,6 @@
     <div class="ui main container" style="margin-top: 1em;">
       <%= yield %>
     </div>
+    <%= yield :javascript_packs %>
   </body>
 </html>

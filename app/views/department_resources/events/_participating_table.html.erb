@@ -17,6 +17,7 @@
       <th class="center aligned">Наши участники</th>
       <th class="center aligned">Всего участников</th>
       <th class="center aligned">Утверждено</th>
+      <th class="center aligned">Ответственные</th>
       <th class="center aligned">Действия</th>
     </tr>
   </thead>
@@ -66,6 +67,11 @@
         <td class="center aligned">
           <%= ed.created_at.strftime('%d.%m.%Y') %>
           <%= ed.approved_by.full_name %> 
+        </td>
+        <td class="center aligned">
+          <% ed.event.responsible_people&.each_with_index do |person, index| %>
+            <%= person.description %><% if index < ed.event.responsible_people.size - 1 %><br><% end %>
+          <% end %>
         </td>
         <td class="center aligned">
           <%= render_event_buttons(ed) %>

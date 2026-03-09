@@ -18,6 +18,7 @@ Rails.application.routes.draw do
       get :available_departments
       post :offer
       post :assign   # Назначить участие
+      post :add_responsible_person
     end
   end
   resources :offered_event_departments do
@@ -37,6 +38,7 @@ Rails.application.routes.draw do
       get :edit_roles
       patch :update_roles
       post :select_current_role
+      get :roles
     end
     collection do
       get :manage_roles  #страница управления ролями
@@ -50,10 +52,10 @@ Rails.application.routes.draw do
       delete :remove_user
     end
   end
-  resources :departments, only: [ :index, :new, :edit, :create, :update, :destroy] do
+  resources :departments, only: [ :index, :new, :edit, :create, :update, :destroy, :show] do
     scope module: :department_resources do
       resources :roles, only:[:index]
-      resources :plans, only: [:index, :new, :create, :edit, :show, :update]
+      resources :plans, only: [:index, :new, :create, :edit, :show, :update] 
       resources :events, only: [:index]
       resources :users, only: [:index]
       resources :directions, only: [:index, :new, :create, :edit, :show, :update, :destroy]
@@ -70,6 +72,9 @@ Rails.application.routes.draw do
     # Стандартные вложенные ресурсы для plan_events
     collection do
       get :index, constraints: ->(req) { req.params[:for_bulk_add].present? }
+    end
+    member do
+      get :export_excel
     end
     resources :plan_events, only: [:create, :destroy] do
       collection do

@@ -40,7 +40,7 @@ class DepartmentsController < ApplicationController
     if @department.save
       redirect_to @department, notice: 'Подразделение успешно создано'
     else
-      render :new
+      redirect_to new_department_path(parent_id: @department.parent_id)
     end
   end
 
@@ -50,10 +50,9 @@ class DepartmentsController < ApplicationController
 
   def update
     authorize_action(:edit, @department)
-    if @department.update(department_params)
+    if @department.update(department_params.except(:parent_id))
       redirect_to @department, notice: 'Подразделение успешно обновлено'
     else
-      @available_parents = Department.where.not(id: @department.id)
       render :edit
     end
   end

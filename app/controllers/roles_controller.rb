@@ -1,6 +1,6 @@
 class RolesController < ApplicationController
     before_action :authenticate_user!
-    before_action :store_referer, only: [:new, :edit]
+    before_action :store_referer, only: [:new, :edit, :destroy]
     before_action :set_role, only: [:edit, :update, :show, :destroy, :remove_user, :assign_user]
     
     def new
@@ -37,7 +37,8 @@ class RolesController < ApplicationController
     def destroy
         authorize_action(:edit, @role)
         @role.destroy
-        redirect_to roles_path
+        redirect_to stored_referer || department_path(@role.department),
+        notice: 'Роль успешно обновлена'
     end
 
     def assign_user

@@ -3,5 +3,5 @@ class ApplicationController < ActionController::Base
     include Authorization
     include Referencing
     include PermissionsInheritanceHandler
-    
+    include Pagy::Backend
 end

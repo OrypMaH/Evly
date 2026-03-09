@@ -1,22 +1,24 @@
+<%# app/views/department_resources/events/index.html.erb %>
 <div class="ui container">
   <h1 class="ui header">Мероприятия</h1>
+  
   <!-- Вкладки -->
   <div class="ui top attached tabular menu">
-    <%= link_to department_events_path(tab: 'approved'), 
+    <%= link_to department_events_path(tab: 'approved', department_id: @department.id), 
                 class: "item #{'active' if @active_tab == 'approved'}" do %>
       <i class="check circle icon"></i>
       Участвуем
-      <div class="ui teal circular label"><%= participating_count(Department.find(params[:department_id])) %></div>
+      <div class="ui teal circular label"><%= participating_count(@department) %></div>
     <% end %>
     
-    <%= link_to department_events_path(tab: 'offered'), 
+    <%= link_to department_events_path(tab: 'offered', department_id: @department.id), 
                 class: "item #{'active' if @active_tab == 'offered'}" do %>
       <i class="hourglass half icon"></i>
       Предложенные
-      <div class="ui blue circular label"><%= offered_count(Department.find(params[:department_id])) %></div>
+      <div class="ui blue circular label"><%= offered_count(@department) %></div>
     <% end %>
     
-    <%= link_to department_events_path(tab: 'my_events'), 
+    <%= link_to department_events_path(tab: 'my_events', department_id: @department.id), 
                 class: "item #{'active' if @active_tab == 'my_events'}" do %>
       <i class="user icon"></i>
       Мои мероприятия
@@ -40,14 +42,49 @@
 
   <!-- Контент вкладок -->
   <div class="ui bottom attached segment">
-    <% if @events.empty? && @event_departments.empty?%>
+    <% if @events.empty? && @event_departments.empty? %>
       <div class="ui warning message">
-        <div class="header">
-          <%= empty_table_message %>
-        </div>
+        <div class="header"><%= empty_table_message %></div>
       </div>
     <% else %>
+      <!-- Отображаем соответствующую таблицу -->
       <%= render_table_for_tab %>
+      
+      <!-- Пагинация для всех вкладок -->
+      <% if @pagy && @pagy.pages > 1 %>
+        <div class="ui center aligned segment" style="border: none; box-shadow: none; margin-top: 20px;">
+          <div class="ui pagination menu">
+            <!-- Кнопка "Назад" -->
+            <% if @pagy.prev %>
+              <%= link_to '← Назад', 
+                  department_events_path(tab: @active_tab, department_id: @department.id, page: @pagy.prev), 
+                  class: 'item' %>
+            <% else %>
+              <span class="item disabled">← Назад</span>
+            <% end %>
+            
+            <!-- Номера страниц -->
+            <% @pagy.series.each do |item| %>
+              <% if item.is_a?(Integer) %>
+                <%= link_to item, 
+                    department_events_path(tab: @active_tab, department_id: @department.id, page: item), 
+                    class: "item #{'active' if @pagy.page == item}" %>
+              <% elsif item.is_a?(String) %>
+                <span class="item disabled"><%= item %></span>
+              <% end %>
+            <% end %>
+            
+            <!-- Кнопка "Вперед" -->
+            <% if @pagy.next %>
+              <%= link_to 'Вперед →', 
+                  department_events_path(tab: @active_tab, department_id: @department.id, page: @pagy.next), 
+                  class: 'item' %>
+            <% else %>
+              <span class="item disabled">Вперед →</span>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
     <% end %>
   </div>
 </div>

@@ -2,6 +2,8 @@
 const $ = window.$ || window.jQuery;
 
 export function initBulkAdd() {
+  console.log('🔍 Инициализация bulk add');
+  
   const bulkAddButton = document.getElementById('bulkAddButton');
   const selectAllCheckbox = document.getElementById('selectAllCheckbox');
   const eventCheckboxes = document.querySelectorAll('.event-checkbox');
@@ -12,6 +14,14 @@ export function initBulkAdd() {
   const selectedEventsCountSpan = document.getElementById('selectedEventsCount');
   const selectedCountSpan = document.getElementById('selectedCount');
   const selectedCountLabel = document.getElementById('selectedCountLabel');
+  
+  console.log('✅ Найдены элементы:', {
+    bulkAddButton: !!bulkAddButton,
+    selectAllCheckbox: !!selectAllCheckbox,
+    eventCheckboxes: eventCheckboxes.length,
+    bulkAddModal: !!bulkAddModal,
+    planSelect: !!planSelect
+  });
   
   // Инициализация
   if (bulkAddButton) {
@@ -45,66 +55,56 @@ export function initBulkAdd() {
     }
     
     // Открытие модального окна для добавления
-    bulkAddButton.addEventListener('click', function() {
-      const selectedEventDepartments = getSelectedEventDepartmentsData();
-      if (selectedEventDepartments.length > 0) {
-        openBulkAddModal(selectedEventDepartments);
-      }
-    });
-    
-    // Загрузка планов при открытии модального окна
-    if (bulkAddModal) {
-      $(bulkAddModal).modal({
-        onShow: function() {
-          const selectedData = bulkAddModal.getAttribute('data-selected-data');
-          if (selectedData) {
-            loadPlansForEventDepartments(JSON.parse(selectedData));
-          }
-        },
-        onHide: function() {
-          resetModal();
+    if (bulkAddButton) {
+      bulkAddButton.addEventListener('click', function() {
+        console.log('👆 Кнопка bulk add нажата');
+        const selectedEventDepartments = getSelectedEventDepartmentsData();
+        console.log('Выбранные мероприятия:', selectedEventDepartments);
+        
+        if (selectedEventDepartments.length > 0) {
+          openBulkAddModal(selectedEventDepartments);
         }
       });
     }
     
-    // Обработчик выбора плана
-    if (planSelect) {
-      planSelect.addEventListener('change', function() {
-        updatePlanInfo(this.value);
-        updateConfirmButton();
-      });
+    // Инициализация Semantic UI компонентов
+    try {
+      $('.ui.checkbox').checkbox();
+      $('.ui.dropdown').dropdown();
+      console.log('✅ Semantic UI компоненты инициализированы');
+    } catch (e) {
+      console.error('❌ Ошибка инициализации Semantic UI:', e);
     }
     
-    // Инициализация Semantic UI
-    $('.ui.checkbox').checkbox();
-    $('.ui.dropdown').dropdown();
+    // Обновляем счетчик при загрузке
+    updateSelectionCount();
   }
   
   function updateSelectionCount() {
     const selectedCount = getSelectedEventDepartmentsData().length;
     const hasSelection = selectedCount > 0;
     
-    // Обновляем счетчик на странице
+    console.log('Обновление счетчика:', selectedCount);
+    
     if (selectedCountSpan) {
       selectedCountSpan.textContent = selectedCount;
     }
     
-    // Показываем/скрываем счетчик
     if (selectedCountLabel) {
       selectedCountLabel.style.display = hasSelection ? 'inline-block' : 'none';
     }
     
-    // Включаем/выключаем кнопку
     if (bulkAddButton) {
       bulkAddButton.disabled = !hasSelection;
     }
     
-    // Обновляем состояние "Выбрать все"
     if (selectAllCheckbox) {
       const allChecked = eventCheckboxes.length > 0 && 
                          selectedCount === eventCheckboxes.length;
       selectAllCheckbox.checked = allChecked;
-      $(selectAllCheckbox).checkbox('set checked', allChecked);
+      try {
+        $(selectAllCheckbox).checkbox('set checked', allChecked);
+      } catch (e) {}
     }
   }
   
@@ -126,11 +126,15 @@ export function initBulkAdd() {
   }
   
   function openBulkAddModal(selectedData) {
+    console.log('📂 Открытие модального окна с данными:', selectedData);
+    
     // Сохраняем выбранные данные в модальном окне
     bulkAddModal.setAttribute('data-selected-data', JSON.stringify(selectedData));
     
     // Обновляем счетчик в модальном окне
-    selectedEventsCountSpan.textContent = selectedData.length;
+    if (selectedEventsCountSpan) {
+      selectedEventsCountSpan.textContent = selectedData.length;
+    }
     
     // Показываем список выбранных мероприятий
     const selectedEventsList = document.getElementById('selectedEventsList');
@@ -145,50 +149,116 @@ export function initBulkAdd() {
       selectedEventsList.style.display = selectedData.length > 0 ? 'block' : 'none';
     }
     
+    // Устанавливаем обработчики для модального окна перед открытием
+    setupModalHandlers();
+    
     // Показываем модальное окно
-    $(bulkAddModal).modal('show');
+    try {
+      $(bulkAddModal).modal('show');
+      console.log('✅ Модальное окно открыто');
+      
+      // Загружаем планы сразу после открытия
+      setTimeout(() => {
+        console.log('⏰ Загрузка планов после открытия');
+        loadPlansForEventDepartments(selectedData);
+      }, 300);
+    } catch (e) {
+      console.error('❌ Ошибка открытия модального окна:', e);
+    }
+  }
+  
+  function setupModalHandlers() {
+    console.log('🔧 Настройка обработчиков модального окна');
+    
+    // Удаляем старые обработчики, если они были
+    $(bulkAddModal).off('click', '#confirmBulkAdd');
+    
+    // Обработчик подтверждения
+    $('#confirmBulkAdd').off('click').on('click', function() {
+      console.log('✅ Кнопка подтверждения нажата');
+      const selectedPlanId = planSelect.value;
+      const selectedData = JSON.parse(bulkAddModal.getAttribute('data-selected-data') || '[]');
+      const eventDepartmentIds = selectedData.map(item => item.id);
+      
+      console.log('Добавление в план:', { planId: selectedPlanId, eventIds: eventDepartmentIds });
+      
+      if (selectedPlanId && eventDepartmentIds.length > 0) {
+        addEventsToPlan(selectedPlanId, eventDepartmentIds);
+      } else {
+        showError('Выберите план');
+      }
+    });
+    
+    // Обработчик выбора плана
+    $(planSelect).off('change').on('change', function() {
+      console.log('📋 Выбран план:', this.value);
+      updatePlanInfo(this.value);
+      updateConfirmButton();
+    });
   }
   
   function loadPlansForEventDepartments(selectedData) {
-    // Собираем ID мероприятий для отправки
+    console.log('🌐 Загрузка планов для мероприятий:', selectedData);
+    
     const eventDepartmentIds = selectedData.map(item => item.id);
+    console.log('ID мероприятий:', eventDepartmentIds);
     
-    // Рассчитываем период мероприятий
-    const startDates = selectedData.map(item => new Date(item.start_date));
+    const startDates = selectedData
+      .map(item => item.start_date ? new Date(item.start_date) : null)
+      .filter(date => date !== null);
+    
     const minStartDate = startDates.length > 0 ? 
-      new Date(Math.min(...startDates)).toISOString().split('T')[0] : null;
+      new Date(Math.min(...startDates)).toISOString().split('T')[0] : '';
     const maxStartDate = startDates.length > 0 ? 
-      new Date(Math.max(...startDates)).toISOString().split('T')[0] : null;
+      new Date(Math.max(...startDates)).toISOString().split('T')[0] : '';
     
-      const params = new URLSearchParams({
-        for_bulk_add: 'true',
-        event_department_ids: eventDepartmentIds.join(','),
-        min_start_date: minStartDate,
-        max_start_date: maxStartDate
-      });
+    console.log('Диапазон дат:', { minStartDate, maxStartDate });
+    
+    const params = new URLSearchParams({
+      for_bulk_add: 'true',
+      event_department_ids: eventDepartmentIds.join(','),
+      min_start_date: minStartDate,
+      max_start_date: maxStartDate
+    });
 
-      fetch(`/plans?${params}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
-        }
-      })
-      .then(response => response.json())
-      .then(data => {
-        updatePlanSelect(data.plans);
-      })
-      .catch(error => {
-        console.error('Error loading plans:', error);
-        showError('Ошибка загрузки планов');
-      });
+    const url = `/plans?${params}`;
+    console.log('📡 URL запроса:', url);
+    
+    const csrfToken = document.querySelector('[name="csrf-token"]')?.content;
+    console.log('🔑 CSRF токен:', csrfToken ? 'найден' : 'не найден');
+
+    fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrfToken,
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => {
+      console.log('📥 Статус ответа:', response.status);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('📦 Получены данные:', data);
+      updatePlanSelect(data.plans || []);
+    })
+    .catch(error => {
+      console.error('❌ Ошибка загрузки планов:', error);
+      showError('Ошибка загрузки планов: ' + error.message);
+      updatePlanSelect([]);
+    });
   }
   
   function updatePlanSelect(plans) {
-    // Очищаем список
+    console.log('🔄 Обновление списка планов, получено планов:', plans.length);
+    
     planSelect.innerHTML = '<option value="">Выберите план...</option>';
     
-    // Добавляем планы
     if (plans && plans.length > 0) {
       plans.forEach(plan => {
         const option = document.createElement('option');
@@ -198,7 +268,9 @@ export function initBulkAdd() {
         planSelect.appendChild(option);
       });
       
+      console.log('✅ Добавлено опций:', plans.length);
     } else {
+      console.log('⚠️ Нет подходящих планов');
       const option = document.createElement('option');
       option.value = "";
       option.textContent = "Нет подходящих планов";
@@ -206,8 +278,13 @@ export function initBulkAdd() {
       planSelect.appendChild(option);
     }
     
-    // Реинициализируем dropdown
-    $(planSelect).dropdown('refresh');
+    try {
+      $(planSelect).dropdown('refresh');
+      console.log('✅ Dropdown обновлен');
+    } catch (e) {
+      console.error('❌ Ошибка обновления dropdown:', e);
+    }
+    
     updateConfirmButton();
   }
   
@@ -220,12 +297,18 @@ export function initBulkAdd() {
     if (planId) {
       const selectedOption = planSelect.querySelector(`option[value="${planId}"]`);
       if (selectedOption && selectedOption.getAttribute('data-plan-info')) {
-        const plan = JSON.parse(selectedOption.getAttribute('data-plan-info'));
-        
-        planTitle.textContent = plan.title;
-        planPeriod.textContent = `${plan.start_date} - ${plan.end_date}`;
-        planEventsCount.textContent = plan.events_count || 0;
-        planInfo.style.display = 'block';
+        try {
+          const plan = JSON.parse(selectedOption.getAttribute('data-plan-info'));
+          
+          planTitle.textContent = plan.title;
+          planPeriod.textContent = `${plan.start_date} - ${plan.end_date}`;
+          planEventsCount.textContent = plan.events_count || 0;
+          planInfo.style.display = 'block';
+          console.log('📋 Информация о плане:', plan);
+        } catch (e) {
+          console.error('❌ Ошибка парсинга информации о плане:', e);
+          planInfo.style.display = 'none';
+        }
       } else {
         planInfo.style.display = 'none';
       }
@@ -236,18 +319,25 @@ export function initBulkAdd() {
   
   function updateConfirmButton() {
     const selectedPlanId = planSelect.value;
-    const hasPlans = planSelect.options.length > 1; // больше чем один option (первый пустой)
+    const hasPlans = planSelect.options.length > 1;
     confirmBulkAddButton.disabled = !selectedPlanId || !hasPlans;
+    console.log('🔘 Кнопка подтверждения:', confirmBulkAddButton.disabled ? 'выключена' : 'включена');
   }
   
   function resetModal() {
+    console.log('🔄 Сброс модального окна');
     planSelect.value = '';
+    try {
+      $(planSelect).dropdown('refresh');
+    } catch (e) {}
     document.getElementById('planInfo').style.display = 'none';
     document.getElementById('periodInfo').style.display = 'none';
+    document.getElementById('modalError').style.display = 'none';
     confirmBulkAddButton.disabled = true;
   }
   
   function showError(message) {
+    console.error('❌ Ошибка:', message);
     const errorDiv = document.getElementById('modalError');
     if (errorDiv) {
       errorDiv.innerHTML = `<div class="ui error message">${message}</div>`;
@@ -255,37 +345,28 @@ export function initBulkAdd() {
     }
   }
   
-  // Обработчик подтверждения добавления
-  if (confirmBulkAddButton) {
-    confirmBulkAddButton.addEventListener('click', function() {
-      const selectedPlanId = planSelect.value;
-      const selectedData = JSON.parse(bulkAddModal.getAttribute('data-selected-data') || '[]');
-      const eventDepartmentIds = selectedData.map(item => item.id);
-      
-      if (selectedPlanId && eventDepartmentIds.length > 0) {
-        addEventsToPlan(selectedPlanId, eventDepartmentIds);
-      }
-    });
-  }
-  
   function addEventsToPlan(planId, eventDepartmentIds) {
-    const formData = new FormData();
-    eventDepartmentIds.forEach(id => {
-      formData.append('event_department_ids[]', id);
-    });
+    console.log('➕ Добавление мероприятий в план:', { planId, eventDepartmentIds });
+    
+    const csrfToken = document.querySelector('[name="csrf-token"]')?.content;
     
     fetch(`/plans/${planId}/plan_events/bulk_create`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
+        'X-CSRF-Token': csrfToken,
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
       },
       body: JSON.stringify({
         event_department_ids: eventDepartmentIds
       })
     })
     .then(response => {
+      console.log('📥 Статус ответа:', response.status);
+      
       if (response.redirected) {
+        console.log('🔄 Редирект на:', response.url);
         window.location.href = response.url;
       } else if (response.ok) {
         return response.json();
@@ -294,17 +375,21 @@ export function initBulkAdd() {
       }
     })
     .then(data => {
-      if (data && data.success) {
-        $(bulkAddModal).modal('hide');
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
-      } else if (data && data.error) {
-        showError('Ошибка: ' + data.error);
+      if (data) {
+        console.log('📦 Данные ответа:', data);
+        if (data.success) {
+          console.log('✅ Успешно добавлено');
+          $(bulkAddModal).modal('hide');
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
+        } else if (data.error) {
+          showError('Ошибка: ' + data.error);
+        }
       }
     })
     .catch(error => {
-      console.error('Error:', error);
+      console.error('❌ Ошибка:', error);
       showError('Произошла ошибка при добавлении мероприятий');
     });
   }

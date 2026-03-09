@@ -3,6 +3,8 @@ class Event < ApplicationRecord
     validates :start_date, presence: true
     validates :end_date, presence: true
 
+    
+
     validate :validate_period_order
     validate :at_least_one_responsible_person, on: :update
 
@@ -14,6 +16,7 @@ class Event < ApplicationRecord
     has_many :offered_event_departments, dependent: :destroy
     has_many :approved_event_departments, dependent: :destroy
     has_many :responsible_people, dependent: :destroy
+    has_many :responsible_users, through: :responsible_people, source: :user
     
     scope :upcoming, -> { where('start_date > ?', Time.current) }
     scope :ongoing, -> { where('start_date <= ? AND end_date >= ?', Time.current, Time.current) }
@@ -36,7 +39,7 @@ class Event < ApplicationRecord
     
     accepts_nested_attributes_for :responsible_people, 
                                 allow_destroy: true,
-                                reject_if: :all_blank
+                                reject_if: :reject_responsible_person
                                 
 
     def status_for(department)
@@ -97,6 +100,29 @@ class Event < ApplicationRecord
     def at_least_one_responsible_person
         if responsible_people.reject(&:marked_for_destruction?).empty?
         errors.add(:base, "Должно быть хотя бы одно ответственное лицо")
+        end
+    end
+    def reject_responsible_person(attributes)
+        # Отклоняем, если все поля пустые или если помечено на удаление
+        attributes['user_id'].blank? || attributes['role_id'].blank? || 
+        attributes['_destroy'] == '1' || attributes['_destroy'] == true
+    end
+    
+    def validate_responsible_people_uniqueness
+        # Проверяем, что один пользователь не назначен несколько раз
+        user_ids = responsible_people.reject(&:marked_for_destruction?).map(&:user_id)
+        
+        if user_ids.uniq.size != user_ids.size
+            errors.add(:base, "Пользователь не может быть назначен ответственным несколько раз")
+        end
+    end
+    
+    def validate_responsible_people_roles
+        # Проверяем, что указанные роли действительно принадлежат пользователям
+        responsible_people.reject(&:marked_for_destruction?).each do |rp|
+            unless rp.user&.roles&.exists?(id: rp.role_id)
+                errors.add(:base, "Указанная должность не принадлежит выбранному пользователю")
+            end
         end
     end
 end

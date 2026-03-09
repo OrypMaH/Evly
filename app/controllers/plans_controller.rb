@@ -2,7 +2,7 @@
 class PlansController < ApplicationController
   before_action :authenticate_user!
   before_action :store_referer, only: [:bulk_add_events]
-  before_action :set_plan, only: [:destroy,:events, :add_events, :add_event, :remove_event, :reorder, :bulk_add_events]
+  before_action :set_plan, only: [:export_excel, :destroy,:events, :add_events, :add_event, :remove_event, :reorder, :bulk_add_events]
   before_action :check_permissions_for_plan, except: [:new, :create, :index, :department, :my_plans, :events]
   
   def index
@@ -130,6 +130,20 @@ class PlansController < ApplicationController
     end
     
     render json: { plans: plans_with_counts }
+  end
+  def export_excel
+    
+    exporter = PlanExporter.new(@plan)
+    package = exporter.generate
+    
+    respond_to do |format|
+      format.xlsx do
+        send_data package.to_stream.read,
+                  filename: "plan_#{@plan.id}_#{Date.today}.xlsx",
+                  type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                  disposition: 'attachment'
+      end
+    end
   end
 
   # Добавляем право view_plans в ABAC

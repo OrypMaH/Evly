@@ -4,14 +4,13 @@ class ResponsiblePerson < ApplicationRecord
   belongs_to :user
   belongs_to :role
   
-  validates :event_id, presence: true
   validates :user_id, presence: true
   validates :role_id, presence: true
   
   validates :user_id, uniqueness: { 
     scope: :event_id, 
     message: "уже назначен ответственным за это мероприятие" 
-  }
+  }, unless: -> { event_id.nil? }
   
   validate :role_belongs_to_user
   
@@ -23,16 +22,16 @@ class ResponsiblePerson < ApplicationRecord
     user.full_name
   end
   
-  def role
+  def role_name
     role.name
   end
 
   def contact
-    user.sontact
+    user.contact
   end
   
   def description
-    "#{full_name} (#{role_name})"
+    "#{user.short_name} (#{role_name})"
   end
   
   private

@@ -1,6 +1,5 @@
 class UsersController < ApplicationController
     include CurrentDepartmentRedirect
-    before_action :get_roles, only: [:edit_roles]
     before_action :store_referer, only: [:select_current_role]
     
     before_action :authenticate_user!, only: [:manage_roles, :edit_roles, :update_roles, :update, :edit]
@@ -23,6 +22,7 @@ class UsersController < ApplicationController
 
     def edit_roles
         @user = User.find_by id: params[:id]
+        @roles = @user.roles
     end
     def update_roles
         @user = User.find_by id: params[:id]
@@ -46,7 +46,7 @@ class UsersController < ApplicationController
             redirect_back fallback_location: root_path,
                         alert: "Роль не найдена или не назначена вам"
         end
-    end
+    end  
     def update
         @user = User.find_by id: params[:id]
         if @user.update user_params
@@ -65,9 +65,6 @@ class UsersController < ApplicationController
         params.require(:user).permit(role_ids:[])
     end
     
-    def get_roles
-        @roles = [] #future
-    end
     
 
     def show

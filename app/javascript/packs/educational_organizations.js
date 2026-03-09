@@ -1,10 +1,6 @@
 import { initEducationalOrganizationModal } from '../educational_organizations/modal.js';
 
 
-document.addEventListener('DOMContentLoaded', () => {
-    initEducationalOrganizationModal();
-});
-
-document.addEventListener('turbolinks:load', () => {
-    initEducationalOrganizationModal();
-});
+if (window.InitManager) {
+  InitManager.add(initEducationalOrganizationModal);
+}

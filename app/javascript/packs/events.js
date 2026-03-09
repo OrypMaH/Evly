@@ -5,16 +5,9 @@ import { initBulkAdd } from '../events/bulk_add.js';
 import { initOfferParticipationModal } from '../events/offer.js';
 
 
-document.addEventListener('DOMContentLoaded', () => {
-    initApproveParticipationModal();
-    initDirectionFormat();
-    initBulkAdd();
-    initOfferParticipationModal();
-});
-
-document.addEventListener('turbolinks:load', () => {
-    initApproveParticipationModal();
-    initDirectionFormat();
-    initBulkAdd();
-    initOfferParticipationModal();
-});
+if (window.InitManager) {
+  InitManager.add(initApproveParticipationModal);
+  InitManager.add(initDirectionFormat);
+  InitManager.add(initBulkAdd);
+  InitManager.add(initOfferParticipationModal);
+}

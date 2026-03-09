@@ -22,6 +22,10 @@ gem 'jbuilder', '~> 2.7'
 # Use Active Model has_secure_password
 gem 'bcrypt', '~> 3.1.7'
 
+#Excel gen
+gem 'caxlsx' 
+gem 'caxlsx_rails'
+
 # Use Active Storage variant
 # gem 'image_processing', '~> 1.2'
 
@@ -58,3 +62,5 @@ end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem 'tzinfo-data', platforms: %i[ mingw mswin x64_mingw jruby ] if Gem.win_platform? || RUBY_PLATFORM.include?('java')
+
+gem "pagy", "~> 6.5"
