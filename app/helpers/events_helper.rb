@@ -33,17 +33,19 @@ module EventsHelper
     end
   end
   def render_event_buttons(event_related_object)
-    buttons = []
-    case event_related_object.class.name
-    when 'Event'
-      get_event_actions(event_related_object,buttons)
-    when 'OfferedEventDepartment'
-      get_offered_event_actions(event_related_object,buttons)
-    when 'ApprovedEventDepartment'
-      get_approved_event_actions(event_related_object,buttons)
-    end
+    content_tag(:div, class: 'ui mini buttons action-group') do
+      buttons = []
+      case event_related_object.class.name
+      when 'Event'
+        get_event_actions(event_related_object, buttons)
+      when 'OfferedEventDepartment'
+        get_offered_event_actions(event_related_object, buttons)
+      when 'ApprovedEventDepartment'
+        get_approved_event_actions(event_related_object, buttons)
+      end
       
-    safe_join(buttons, '')
+      safe_join(buttons, '')
+    end
   end
 
   def get_event_actions(event,buttons)
@@ -148,11 +150,23 @@ module EventsHelper
   def empty_table_message
     case @active_tab
     when 'approved'
-      "Нет мероприятий с участием вашего подразделения"
+      if @department.approved_event_departments.empty?
+        "Нет мероприятий с участием вашего подразделения"
+      else
+        "Недостаточно прав"
+      end
     when 'offered'
-      "Нет предложенных мероприятий"
+      if @department.offered_event_departments.empty?
+        "Нет предложенных мероприятий"
+      else
+        "Недостаточно прав"
+      end
     when 'my_events'
-      "Вы еще не создали мероприятий"
+      if current_user.events.empty?
+        "Вы еще не создали мероприятий"
+      else
+        "Недостаточно прав"
+      end
     else
       "Мероприятия не найдены"
     end
@@ -174,33 +188,43 @@ module EventsHelper
   def format_event_period(start_date, end_date)
     return '' unless start_date && end_date
     
-    months_ru = %w[
-      января февраля марта апреля мая июня
-      июля августа сентября октября ноября декабря
-    ]
+    months_ru = %w[января февраля марта апреля мая июня
+                  июля августа сентября октября ноября декабря]
     
-    # Форматируем даты
-    if start_date.to_date == end_date.to_date
-      date_part = "🕐 #{start_date.strftime('%d.%m.%Y')}"
-    else
-      if start_date.year == end_date.year
-        if start_date.month == end_date.month
-          date_part = "📅 #{start_date.day}–#{end_date.day} #{months_ru[start_date.month - 1]} #{start_date.year}"
-        else
-          date_part = "📅 #{start_date.day} #{months_ru[start_date.month - 1]} – #{end_date.day} #{months_ru[end_date.month - 1]} #{start_date.year}"
-        end
+    # Форматируем даты без времени
+    date_str = if start_date.to_date == end_date.to_date
+      # Один день
+      "#{start_date.day} #{months_ru[start_date.month - 1]} #{start_date.year}"
+    elsif start_date.year == end_date.year
+      if start_date.month == end_date.month
+        # Один месяц, разные дни
+        "#{start_date.day}–#{end_date.day} #{months_ru[start_date.month - 1]} #{start_date.year}"
       else
-        date_part = "📅 #{start_date.day} #{months_ru[start_date.month - 1]} #{start_date.year} – #{end_date.day} #{months_ru[end_date.month - 1]} #{end_date.year}"
+        # Разные месяцы, один год
+        "#{start_date.day} #{months_ru[start_date.month - 1]} – #{end_date.day} #{months_ru[end_date.month - 1]} #{start_date.year}"
       end
+    else
+      # Разные годы
+      "#{start_date.day} #{months_ru[start_date.month - 1]} #{start_date.year} – #{end_date.day} #{months_ru[end_date.month - 1]} #{end_date.year}"
     end
     
-    # Время всегда на отдельной строке
-    time_part = "#{start_date.strftime('%H:%M')}–#{end_date.strftime('%H:%M')}"
+    content_tag(:div, date_str, class: 'event-period date')
+  end
+
+  def render_responsible_labels(event)
+    return '<span class="ui grey mini label">—</span>'.html_safe if event.responsible_people.blank?
     
-    # Возвращаем с разделением на строки
-    content_tag(:div, class: 'event-period') do
-      content_tag(:div, date_part, class: 'date') +
-      content_tag(:div, time_part, class: 'time')
+    labels = []
+    event.responsible_people.each do |person|
+      labels << content_tag(:div, class: "ui basic mini label", data: { tooltip: "#{person.user.full_name} - #{person.role.name}" }) do
+        link_to(person.user, class: 'inherit-link') do
+          concat content_tag(:i, '', class: "user icon")
+          concat " #{person.user.short_name}"
+        end
+      end
+    end
+    content_tag(:div, class: "ui mini labels") do
+      safe_join(labels)
     end
   end
 end

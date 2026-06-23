@@ -6,7 +6,7 @@ class Event < ApplicationRecord
     
 
     validate :validate_period_order
-    validate :at_least_one_responsible_person, on: :update
+    validate :at_least_one_responsible_person, on: :create
 
     belongs_to :creator, class_name: 'User'
     belongs_to :level, class_name: 'EventLevel', foreign_key: 'event_level_id'

@@ -189,7 +189,8 @@ namespace :permissions do
       { action: "delete", resource: "Event", scope: "personal" },
       
       # Иерархическое управление мероприятиями
-      { action: "manage", resource: "Event", scope: "department_hierarchy" }
+      { action: "manage", resource: "Event", scope: "department_hierarchy" },
+      { action: "show", resource: "Event", scope: "any" }
     ]
 
     event_department_permissions = [
@@ -235,7 +236,20 @@ namespace :permissions do
     puts "Обновление завершено! Добавлено #{event_permissions.count+event_department_permissions.count} новых разрешений для Event"
   end
 
-
+  task directionssetup: :environment do
+    permissions = [
+      { action: "create", resource: "Direction", scope: "own_department" },
+      { action: "edit", resource: "Direction", scope: "own_department" },
+      { action: "delete", resource: "Direction", scope: "own_department" },
+      { action: "show", resource: "Direction", scope: "own_department" }
+    ]
+    core_role = Role.find_by!(
+      id: "1"
+    )
+    permissions.each do |perm|
+      core_role.permissions << Permission.find_or_create_by!(perm)
+    end
+  end
   desc "Show current permissions state"
   task status: :environment do
     puts "📊 Current Permissions Status:"

@@ -1,31 +1,27 @@
 class DepartmentsController < ApplicationController
   before_action :set_department, only: [:show, :edit, :update, :destroy, :role_list]
   before_action :authenticate_user!
-
+  before_action :store_referer
   def index
     if current_user.current_role
-      @departments = current_department.tree
+      @departments = current_user.current_role.department.full_tree
     else
       @departments = []
     end
   end
 
   def show
-     # Ближайший предок (родитель)
     @parent = @department.parent
     
-    # Ближайшие дочерние подразделения (первого уровня)
     @children = @department.children
     
-    # Все мероприятия где подразделение участвует (утвержденные)
     @participating_events = Event.participating_by(@department).limit(10)
     
-    # Роли в этом подразделении
     @roles = @department.roles.includes(:users)
     
-    # Статистика
     @total_users = @department.users.distinct.count
     @total_events = @participating_events.count
+    authorize_action(:show, @department)
   end
 
   def new
@@ -35,12 +31,14 @@ class DepartmentsController < ApplicationController
 
   def create
     @department = Department.new(department_params)
-    authorize_action(:create, @department)
-    
-    if @department.save
-      redirect_to @department, notice: 'Подразделение успешно создано'
+    if can?(:create, @department)
+      if @department.save
+        redirect_to @department, notice: 'Подразделение успешно создано'
+      else
+        redirect_to new_department_path(parent_id: @department.parent_id)
+      end
     else
-      redirect_to new_department_path(parent_id: @department.parent_id)
+      redirect_to stored_referer, alert: "Недостаточно прав для создания подразделения"
     end
   end
 
@@ -49,31 +47,36 @@ class DepartmentsController < ApplicationController
   end
 
   def update
-    authorize_action(:edit, @department)
-    if @department.update(department_params.except(:parent_id))
-      redirect_to @department, notice: 'Подразделение успешно обновлено'
+    if can?(:edit, @department)
+      if @department.update(department_params.except(:parent_id))
+        redirect_to @department, notice: 'Подразделение успешно обновлено'
+      else
+        render :edit
+      end
     else
-      render :edit
+      redirect_to stored_referer, alert: "Недостаточно прав для редактирования этого подразделения"
     end
   end
 
   def destroy
-    authorize_action(:delete, @department)
-    if @department.children.any?
-      redirect_to departments_path, alert: 'Невозможно удалить подразделение с дочерними элементами'
-    elsif @department.roles.any?
-      redirect_to departments_path, alert: 'Невозможно удалить подразделение с привязанными ролями'
+    if can?(:delete, @department)
+      if @department.children.any?
+        redirect_to departments_path, alert: 'Невозможно удалить подразделение с дочерними элементами'
+      elsif @department.roles.any?
+        redirect_to departments_path, alert: 'Невозможно удалить подразделение с привязанными ролями'
+      else
+        @department.destroy
+        redirect_to departments_path, notice: 'Подразделение успешно удалено'
+      end
     else
-      @department.destroy
-      redirect_to departments_path, notice: 'Подразделение успешно удалено'
-    end
+      redirect_to stored_referer, alert: "Недостаточно прав для удаления этого подразделения"
+    end 
   end
 
 
   
   def role_list
     @roles = @department.roles.includes(:users)
-    authorize_action(:show, @department)
   end
 
   private

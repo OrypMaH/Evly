@@ -3,8 +3,8 @@ module Authorization
     included do
         private
         def authorize_action(action, resource)
-            unless AbacEngine.new(current_user).can?(action, resource)
-            redirect_to root_path, alert: "Доступ запрещен"
+            unless can?(action, resource)
+                redirect_to request.referer || root_path, alert: "Доступ запрещен"
             end
             if resource == Role.name && (action == :edit||action== :create)
                 resource.permissions.keep_if{|perm| current_user.current_role.permissions.include?(perm)}
@@ -12,12 +12,12 @@ module Authorization
         end
 
         def abac_engine
-            @abac_engine ||= AbacEngine.new(current_user)
+            @abac_engine ||= Abac::AbacEngine.new(current_user)
         end
 
         def can?(action, resource)
             abac_engine.can?(action, resource)
         end
-        helper_method :authorize_action
+        helper_method :authorize_action, :can?
     end
 end

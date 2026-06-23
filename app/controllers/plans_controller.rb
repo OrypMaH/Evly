@@ -3,22 +3,21 @@ class PlansController < ApplicationController
   before_action :authenticate_user!
   before_action :store_referer, only: [:bulk_add_events]
   before_action :set_plan, only: [:export_excel, :destroy,:events, :add_events, :add_event, :remove_event, :reorder, :bulk_add_events]
-  before_action :check_permissions_for_plan, except: [:new, :create, :index, :department, :my_plans, :events]
   
   def index
-    # Если запрос для bulk add modal
-    if params[:for_bulk_add].present?
-      render_bulk_add_plans
-    else
-      # Обычный список планов
-      @plans = []
-    end
+      if params[:for_bulk_add].present?
+        render_bulk_add_plans
+      else
+        @plans = []
+      end
   end
   
-  # app/controllers/plans_controller.rb
   def bulk_add_events
     event_department_ids = Array(params[:event_department_ids]).map(&:to_i)
-    
+    unless can?(:add_event, @plan.department)
+      redirect_back fallback_location: @plan, alert: "Нет прав на добавление мероприятий в планы подразделение @plan.department.name"
+      return
+    end
     if event_department_ids.empty?
       redirect_back fallback_location: @plan, alert: "Не выбраны мероприятия для добавления"
       return
@@ -31,9 +30,7 @@ class PlansController < ApplicationController
       event_department = ApprovedEventDepartment.find_by(id: event_department_id)
       next unless event_department
       
-      # Проверяем что мероприятие из того же подразделения что и план
       if event_department.department == @plan.department
-        check_permissions_for_plan
         unless @plan.event_department_ids.include?(event_department_id)
           if @plan.plan_events.create(event_department: event_department)
             added_count += 1
@@ -51,7 +48,7 @@ class PlansController < ApplicationController
       message += " (не удалось добавить #{failed_count})" if failed_count > 0
       redirect_to stored_referer, notice: message
     else
-      redirect_to stored_referer alert: "Не удалось добавить мероприятия"
+      redirect_to stored_referer, alert: "Не удалось добавить мероприятия"
     end
   end
   
@@ -77,18 +74,13 @@ class PlansController < ApplicationController
       redirect_to department_plans_path(dept)
   end
   def render_bulk_add_plans
+    
     event_department_ids = Array(params[:event_department_ids]).map(&:to_i)
     min_start_date = params[:min_start_date]
     max_start_date = params[:max_start_date]
     
-    # Проверяем что мероприятия существуют и принадлежат одному подразделению
     event_departments = ApprovedEventDepartment.where(id: event_department_ids)
     
-    if event_departments.empty?
-      return render json: { plans: [], error: "Мероприятия не найдены" }, status: :bad_request
-    end
-    
-    # Проверяем что все мероприятия из одного подразделения
     department_ids = event_departments.pluck(:department_id).uniq
     if department_ids.count > 1
       return render json: { plans: [], error: "Мероприятия из разных подразделений" }, status: :bad_request
@@ -96,24 +88,19 @@ class PlansController < ApplicationController
     
     department = Department.find(department_ids.first)
     
-    # Проверяем права доступа к планам этого подразделения
     unless can?(:add_event, department)
       return render json: { plans: [], error: "Нет доступа к планам этого подразделения" }, status: :forbidden
     end
     
-    # Находим планы подразделения
-    plans = Plan.for_department(department)
+    plans = department.plans
     
-    # Фильтруем планы по периоду (если указаны даты)
     if min_start_date.present? && max_start_date.present?
       begin
         min_date = Date.parse(min_start_date)
         max_date = Date.parse(max_start_date)
         
-        # Ищем планы, которые охватывают весь период мероприятий
         plans = plans.where('start_date <= ? AND end_date >= ?', min_date, max_date)
       rescue Date::Error
-        # Если даты некорректные, пропускаем фильтрацию
       end
     end
     
@@ -132,23 +119,22 @@ class PlansController < ApplicationController
     render json: { plans: plans_with_counts }
   end
   def export_excel
-    
-    exporter = PlanExporter.new(@plan)
-    package = exporter.generate
-    
-    respond_to do |format|
-      format.xlsx do
-        send_data package.to_stream.read,
-                  filename: "plan_#{@plan.id}_#{Date.today}.xlsx",
-                  type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                  disposition: 'attachment'
+    if can?(:show, @plan)
+      exporter = PlanExporter.new(@plan)
+      package = exporter.generate
+      
+      respond_to do |format|
+        format.xlsx do
+          send_data package.to_stream.read,
+                    filename: "plan_#{@plan.id}_#{Date.today}.xlsx",
+                    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    disposition: 'attachment'
+        end
       end
+    else
+      redirect_to stored_referer || department_path(current_department)
+      flash[:error] = "Нет доступа" 
     end
-  end
-
-  # Добавляем право view_plans в ABAC
-  def can_view_plans?(department)
-    can?(:add_event, department) 
   end
   private
   def set_plan

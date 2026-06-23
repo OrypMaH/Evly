@@ -1,0 +1,47 @@
+<div class="ui container">
+      <div class="ui inverted menu stackable amgu-green">
+        <% if user_signed_in? && current_user.department %>
+          <div class="header item">
+            <%= current_department.name%>
+          </div>
+          <div class="ui simple dropdown item">
+            <i class="calendar alternate icon"></i>
+            Планирование
+            <i class="dropdown icon"></i>
+            <div class="menu">
+              <%= link_to department_plans_path(current_user.department.id), class: 'item' do %>
+                <i class="list icon"></i>Планы работы
+              <% end %>
+              <%= link_to department_events_path(current_user.department.id), class: 'item' do %>
+                <i class="travel icon"></i>Мероприятия
+              <% end %>
+            </div>
+          </div>
+            
+          <div class="ui simple dropdown item">
+            <i class="users icon"></i>
+            Управление
+            <i class="dropdown icon"></i>
+            <div class="menu">
+              <%= link_to department_users_path(current_user.department.id), class: 'item' do %>
+                <i class="users icon"></i>Сотрудники
+              <% end %>
+              <%= link_to department_roles_path(current_user.department.id), class: 'item' do %>
+                <i class="user shield icon"></i>Роли
+              <% end %>
+              <%= link_to departments_path, class: 'item' do %>
+                <i class="sitemap icon"></i>Подразделения
+              <% end %>
+              <div class="divider"></div>
+              <%= link_to department_directions_path(current_user.department.id), class: 'item' do %>
+                <i class="compass icon"></i>Направления ВР
+              <% end %>
+            </div>
+          </div>
+        <% else %>
+          <div class="header item">
+            Вы не имеете должности ни в одном подразделении
+          </div>
+        <% end %>
+      </div>
+    </div>

@@ -33,10 +33,8 @@ Rails.application.routes.draw do
       patch :reject   # Отклонить участие
     end
   end
-  resources :users, only: [:new, :create, :edit, :update] do
+  resources :users, only: [:new, :create, :edit, :update, :show] do
     member do
-      get :edit_roles
-      patch :update_roles
       post :select_current_role
       get :roles
     end
@@ -57,7 +55,10 @@ Rails.application.routes.draw do
       resources :roles, only:[:index]
       resources :plans, only: [:index, :new, :create, :edit, :show, :update] 
       resources :events, only: [:index]
-      resources :users, only: [:index]
+      resources :users, only: [:index] do
+        get :edit_roles
+        patch :update_roles
+      end
       resources :directions, only: [:index, :new, :create, :edit, :show, :update, :destroy]
     end
     collection do

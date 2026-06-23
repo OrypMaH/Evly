@@ -1,69 +1,68 @@
 <%# app/views/department_resources/events/index.html.erb %>
 <div class="ui container">
-  <h1 class="ui header">Мероприятия</h1>
+  <!-- Заголовок в стиле АмГУ -->
+  <h3 class="ui header orange" style="margin-top: 1em;">
+    <i class="bordered inverted orange icon calendar"></i>
+    <div class="content">
+      Мероприятия
+      <div class="sub header">Управление мероприятиями подразделения</div>
+    </div>
+  </h3>
   
-  <!-- Вкладки -->
-  <div class="ui top attached tabular menu">
+  <!-- Вкладки в стиле АмГУ (адаптивные) -->
+  <div class="ui grey inverted menu top attached amgu-green" style="border-radius: 8px 8px 0 0 !important; flex-wrap: wrap;">
     <%= link_to department_events_path(tab: 'approved', department_id: @department.id), 
                 class: "item #{'active' if @active_tab == 'approved'}" do %>
       <i class="check circle icon"></i>
-      Участвуем
-      <div class="ui teal circular label"><%= participating_count(@department) %></div>
+      <span class="tab-label">Участвуем</span>
+      <div class="ui red circular mini label"><%= participating_count(@department) %></div>
     <% end %>
     
     <%= link_to department_events_path(tab: 'offered', department_id: @department.id), 
                 class: "item #{'active' if @active_tab == 'offered'}" do %>
       <i class="hourglass half icon"></i>
-      Предложенные
-      <div class="ui blue circular label"><%= offered_count(@department) %></div>
+      <span class="tab-label">Предложенные</span>
+      <div class="ui red circular mini label"><%= offered_count(@department) %></div>
     <% end %>
     
     <%= link_to department_events_path(tab: 'my_events', department_id: @department.id), 
                 class: "item #{'active' if @active_tab == 'my_events'}" do %>
       <i class="user icon"></i>
-      Мои мероприятия
-      <div class="ui green circular label"><%= my_events_count %></div>
-    <% end %>
-    
-    <%= link_to events_path(tab: 'all'), 
-                class: "item #{'active' if @active_tab == 'all'}" do %>
-      <i class="list icon"></i>
-      Все мероприятия
+      <span class="tab-label">Мои мероприятия</span>
+      <div class="ui red circular mini label"><%= my_events_count %></div>
     <% end %>
 
     <% if can?(:create, Event.new) %>
-      <div class="right item">
-        <%= link_to new_event_path, class: 'ui primary button' do %>
-          <i class="plus icon"></i> Создать мероприятие
+      <div class="right menu">
+        <%= link_to new_event_path, class: 'item' do %>
+          <i class="plus icon"></i> <span class="create-label">Создать</span>
         <% end %>
       </div>
     <% end %>
   </div>
 
   <!-- Контент вкладок -->
-  <div class="ui bottom attached segment">
+  <div class="ui bottom attached segment" style="padding: 0; border-radius: 0 0 8px 8px;">
     <% if @events.empty? && @event_departments.empty? %>
-      <div class="ui warning message">
+      <div class="ui warning message" style="margin: 1em;">
         <div class="header"><%= empty_table_message %></div>
       </div>
     <% else %>
       <!-- Отображаем соответствующую таблицу -->
       <%= render_table_for_tab %>
       
-      <!-- Пагинация для всех вкладок -->
+      <!-- Пагинация в стиле АмГУ -->
       <% if @pagy && @pagy.pages > 1 %>
-        <div class="ui center aligned segment" style="border: none; box-shadow: none; margin-top: 20px;">
-          <div class="ui pagination menu">
-            <!-- Кнопка "Назад" -->
+        <div class="ui center aligned basic segment" style="margin-top: 20px; padding: 10px;">
+          <div class="ui tiny pagination menu">
             <% if @pagy.prev %>
-              <%= link_to '← Назад', 
+              <%= link_to '←', 
                   department_events_path(tab: @active_tab, department_id: @department.id, page: @pagy.prev), 
                   class: 'item' %>
             <% else %>
-              <span class="item disabled">← Назад</span>
+              <span class="item disabled">←</span>
             <% end %>
             
-            <!-- Номера страниц -->
             <% @pagy.series.each do |item| %>
               <% if item.is_a?(Integer) %>
                 <%= link_to item, 
@@ -74,13 +73,12 @@
               <% end %>
             <% end %>
             
-            <!-- Кнопка "Вперед" -->
             <% if @pagy.next %>
-              <%= link_to 'Вперед →', 
+              <%= link_to '→', 
                   department_events_path(tab: @active_tab, department_id: @department.id, page: @pagy.next), 
                   class: 'item' %>
             <% else %>
-              <span class="item disabled">Вперед →</span>
+              <span class="item disabled">→</span>
             <% end %>
           </div>
         </div>
@@ -95,3 +93,222 @@
 <% content_for :javascript_packs do %>
   <%= javascript_pack_tag 'events' %>
 <% end %>
+
+<style>
+  /* Компактная таблица */
+  .ui.compact.table td {
+    padding: 0.5em 0.3em !important;
+    font-size: 0.9em;
+    line-height: 1.2;
+  }
+  
+  /* Мини-лейблы */
+  .ui.mini.labels .label,
+  .ui.mini.label {
+    font-size: 0.9em;
+  }
+  
+  /* Многострочные ограничители текста */
+  .line-clamp-1, .line-clamp-2, .line-clamp-3, .line-clamp-4, .line-clamp-5 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-word;
+    line-height: 1.3em;
+  }
+  
+  .line-clamp-1 { -webkit-line-clamp: 1; max-height: 1.3em; }
+  .line-clamp-2 { -webkit-line-clamp: 2; max-height: 2.6em; }
+  .line-clamp-3 { -webkit-line-clamp: 3; max-height: 3.9em; }
+  .line-clamp-4 { -webkit-line-clamp: 4; max-height: 5.2em; }
+  .line-clamp-5 { -webkit-line-clamp: 5; max-height: 6.5em; }
+  
+  /* Перенос в заголовках */
+  .ui.compact.table th {
+    padding: 0.6em 0.3em !important;
+    font-size: 0.9em;
+    white-space: normal;  
+    word-break: break-word;  
+    line-height: 1.3;
+    vertical-align: middle;
+    height: auto;
+  }
+  
+  /* Стили для статусов */
+  .ui.label.approved {
+    background-color: #21ba45 !important;
+    color: white !important;
+  }
+  
+  .ui.label.offered {
+    background-color: #2185d0 !important;
+    color: white !important;
+  }
+
+  .title-text {
+    color: #016559;
+    font-weight: 500;
+  }
+  
+  /* Переопределение стилей Semantic UI для горизонтального расположения */
+  .ui.mini.buttons.action-group {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 4px !important;
+  }
+
+  .ui.mini.buttons.action-group .button {
+    border-radius: 50% !important;
+    width: 2.2em !important;
+    height: 2.2em !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  
+  /* ========== МОБИЛЬНАЯ АДАПТАЦИЯ ========== */
+  @media only screen and (max-width: 767px) {
+    /* Таблица превращается в карточки */
+    .ui.table {
+      display: block;
+    }
+    
+    .ui.table thead {
+      display: none;
+    }
+    
+    .ui.table tbody,
+    .ui.table tr,
+    .ui.table td {
+      display: block;
+    }
+    
+    .ui.table tr {
+      margin-bottom: 1em;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 0.5em;
+      background: white;
+    }
+    
+    .ui.table td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.6em 0.4em !important;
+      border: none !important;
+      border-bottom: 1px solid #eee !important;
+    }
+    
+    .ui.table td:before {
+      content: attr(data-label);
+      font-weight: bold;
+      width: 40%;
+      min-width: 100px;
+      color: #016559;
+    }
+    
+    .ui.table td:last-child {
+      border-bottom: none !important;
+    }
+    
+    /* Вкладки на мобильных */
+    .ui.menu.top.attached {
+      flex-wrap: wrap;
+    }
+    
+    .ui.menu.top.attached .item {
+      flex: 1;
+      text-align: center;
+      padding: 0.5em 0.3em !important;
+      font-size: 0.8em;
+    }
+    
+    .ui.menu.top.attached .tab-label,
+    .ui.menu.top.attached .create-label {
+      display: inline;
+    }
+    
+    /* Скрываем длинные тексты */
+    .line-clamp-3 {
+      -webkit-line-clamp: 2;
+      max-height: 2.6em;
+    }
+    
+    /* Уменьшаем шрифт */
+    body {
+      font-size: 14px;
+    }
+    
+    /* Кнопки действий */
+    .ui.mini.buttons.action-group {
+      gap: 2px !important;
+    }
+    
+    .ui.mini.buttons.action-group .button {
+      width: 2em !important;
+      height: 2em !important;
+    }
+    
+    /* Контейнер */
+    .ui.container {
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+    }
+    
+    /* Пагинация */
+    .ui.tiny.pagination.menu .item {
+      padding: 0.5em 0.8em !important;
+    }
+  }
+  
+  /* Планшеты */
+  @media only screen and (min-width: 768px) and (max-width: 1024px) {
+    .ui.table td:before {
+      width: 35%;
+      min-width: 90px;
+    }
+    
+    .ui.menu.top.attached .item {
+      font-size: 0.85em;
+    }
+  }
+</style>
+
+<script>
+  document.addEventListener('turbolinks:load', function() {
+    // Добавляем data-label для мобильных таблиц
+    function addDataLabels() {
+      if (window.innerWidth <= 767) {
+        document.querySelectorAll('.ui.table').forEach(table => {
+          // Получаем заголовки
+          const headers = [];
+          table.querySelectorAll('thead th').forEach(th => {
+            headers.push(th.innerText.trim());
+          });
+          
+          // Добавляем data-label для каждой ячейки
+          table.querySelectorAll('tbody tr').forEach(row => {
+            row.querySelectorAll('td').forEach((td, index) => {
+              if (headers[index] && headers[index] !== '') {
+                td.setAttribute('data-label', headers[index]);
+              }
+            });
+          });
+        });
+      }
+    }
+    
+    addDataLabels();
+    
+    // Слушаем изменение ориентации
+    window.addEventListener('resize', function() {
+      if (window.innerWidth <= 767) {
+        addDataLabels();
+      }
+    });
+  });
+</script>

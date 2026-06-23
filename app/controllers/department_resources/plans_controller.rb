@@ -3,8 +3,18 @@ module DepartmentResources
         before_action :set_plan, only: [:show, :edit, :update ]
         def index
             @plans = @department.plans.order(start_date: :desc)
+            if (@plans.first)
+                authorize_action(:show, @plans.first)
+            else
+                plan = Plan.new(
+                    department: @department,
+                    creator: current_user,
+                    start_date: Date.current,
+                    end_date: Date.current + 1.month
+                )
+                authorize_action(:show, plan)
+            end
             
-            # Разделение планов по статусам
             @active_plans = @plans.active
             @upcoming_plans = @plans.where('start_date > ?', Date.current)
             @past_plans = @plans.where('end_date < ?', Date.current)
@@ -22,7 +32,7 @@ module DepartmentResources
             end
         end
         def show
-
+            authorize_action(:show, @plan)
         end        
         def new
             @plan = Plan.new(
@@ -31,24 +41,34 @@ module DepartmentResources
                 start_date: Date.current,
                 end_date: Date.current + 1.month
             )
-            check_permissions_for_plan
+            authorize_action(:create, @plan)
         end
+
         def create
             @plan = Plan.new(plan_params)
             @plan.creator = current_user
-            check_permissions_for_plan
-            if @plan.save
-                redirect_to [@plan.department, @plan], notice: 'План успешно создан'
+            if can?(:create, @plan)
+                if @plan.save
+                    redirect_to [@plan.department, @plan], notice: 'План успешно создан'
+                else
+                    render :new
+                end
             else
-                render :new
+                redirect_to stored_referer
             end
         end
-        def update
+        def edit
             authorize_action(:edit, @plan)
-            if @plan.update(plan_params)
-                redirect_to [@department,@plan], notice: 'Подразделение успешно обновлено'
+        end
+        def update
+            if can?(:edit, @plan)
+                if @plan.update(plan_params)
+                    redirect_to [@department,@plan], notice: 'Подразделение успешно обновлено'
+                else
+                    render :edit
+                end
             else
-                render :edit
+                redirect_to stored_referer
             end
         end
         

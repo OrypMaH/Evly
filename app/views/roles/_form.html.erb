@@ -1,27 +1,207 @@
-<%= form_with model: @role do |f| %>
-  <% if @role.department_id.present? %>
-    <%= f.hidden_field :department_id %>
-    
-    <div class="ui message">
-      <i class="info circle icon"></i>
-      Роль будет создана в подразделении: 
-      <strong><%= Department.find(@role.department_id).name %></strong>
-    </div>
-  <% else %>
-    <div class="field">
-      <%= f.label :department_id, "Подразделение" %>
-      <%= f.collection_select :department_id, Department.all, :id, :name, 
-                            { include_blank: "Выберите подразделение" },
-                            { class: 'ui dropdown' } %>
-    </div>
-  <% end %>
+<%# app/views/roles/_form.html.erb %>
+<%= form_with model: @role, class: 'ui form' do |f| %>
+  <!-- Скрытое поле для department_id -->
+  <%= f.hidden_field :department_id, value: params[:department_id] || @role.department_id %>
   
-  <div class="field">
-    <%= f.label :name, "Название роли" %>
-    <%= f.text_field :name, placeholder: "Введите название роли" %>
+  <!-- Блок с информацией о подразделении -->
+  <div class="ui message " style="background: #f0f8ff; border-left: 4px solid #016559;">
+    <i class="info circle icon" style="color: #016559;"></i>
+    Роль будет создана в подразделении: 
+    <strong><%= Department.find(@role.department_id).name %></strong>
   </div>
   
-  <%= f.submit "Создать роль", class: 'ui primary button' %>
-  <%= link_to 'Отмена', departments_path, class: 'ui button' %>
-  <%= render 'permissions_form' %>
+  <!-- Основное поле для названия роли -->
+  <div class="field">
+    <%= f.label :name, "Название роли" %>
+    <div class="ui left icon input">
+      <i class="user secret icon" style="color: #016559;"></i>
+      <%= f.text_field :name, placeholder: "Введите название роли (например: Старший преподаватель)" %>
+    </div>
+  </div>
+  
+  <!-- Кнопки действий -->
+  <div class="ui buttons">
+    <%= f.submit @role.new_record? ? "Создать роль" : "Сохранить изменения", 
+                 class: 'ui primary button amgu-green' %>
+    <%= link_to 'Отмена', department_roles_path(@role.department), class: 'ui button' %>
+  </div>
+  
+  <!-- Разрешения роли -->
+  <div class="ui segment" style="margin-top: 2rem;">
+    <div class="ui grid">
+      <div class="eight wide column">
+        <h3 class="ui header">
+          <i class="key icon" style="color: #016559;"></i>
+          Разрешения роли
+        </h3>
+      </div>
+      <div class="eight wide column right aligned">
+        <div class="ui buttons">
+          <button type="button" id="select-all-permissions" class="ui basic button">
+            <i class="check square outline icon"></i> Выбрать все
+          </button>
+          <button type="button" id="clear-all-permissions" class="ui basic button">
+            <i class="square outline icon"></i> Снять все
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="ui styled fluid accordion" id="permissions-accordion" data-accordion-open="all">
+      <% grouped_permissions.each do |resource, scopes| %>
+        <div class="title">
+          <div class="ui grid">
+            <div class="ten wide column">
+              <i class="dropdown icon"></i>
+              <i class="<%= icon_for_resource(resource) %> icon" style="color: #016559;"></i>
+              <strong><%= format_resource_title(resource) %></strong>
+              <span class="ui tiny label" style="margin-left: 0.5em;">
+                <%= scopes.sum { |_, perms| perms.count } %>
+              </span>
+            </div>
+              <!-- Кнопки для группы ресурса -->
+            <div class="six wide column">
+              <div class="right floated" style="margin-left: 1em;">
+                <button type="button" class="ui mini basic button select-resource" data-resource="<%= resource %>">
+                  <i class="check square outline icon"></i> Все
+                </button>
+                <button type="button" class="ui mini basic button clear-resource" data-resource="<%= resource %>">
+                  <i class="square outline icon"></i> Снять
+                </button>
+              </div>
+          </div>
+          </div>
+        </div>
+        
+        <div class="content">
+          <div class="ui stackable grid">
+            <% scopes.each do |scope, permissions| %>
+              <div class="eight wide column">
+                <div class="ui segment" style="background: #f9f9f9;">
+                  <div class="ui grid">
+                    <div class="ten wide column">
+                      <h5 class="ui header" style="color: #016559; margin-top: 0;">
+                        <i class="<%= scope_icon(scope) %> icon"></i>
+                        <%= t("permissions.scopes.#{scope}", default: scope.humanize) %>
+                      </h5>
+                    </div>
+                    <div class="six wide column right aligned">
+                      <button type="button" class="ui mini basic button select-scope" data-resource="<%= resource %>" data-scope="<%= scope %>">
+                        Все
+                      </button>
+                      <button type="button" class="ui mini basic button clear-scope" data-resource="<%= resource %>" data-scope="<%= scope %>">
+                        Снять
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div class="ui list" data-resource="<%= resource %>" data-scope="<%= scope %>">
+                    <% permissions.each do |permission| %>
+                      <div class="item">
+                        <div class="ui toggle checkbox">
+                          <%= check_box_tag "role[permission_ids][]", 
+                                            permission.id, 
+                                            @role.permission_ids.include?(permission.id),
+                                            id: "role_permission_ids_#{permission.id}",
+                                            class: "hidden permission-checkbox",
+                                            data: { resource: resource, scope: scope } %>
+                          <label>
+                            <strong><%= format_permission_name(permission) %></strong>
+                            
+                          </label>
+                        </div>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
 <% end %>
+
+<script>
+  document.addEventListener('turbolinks:load', function() {
+    // Инициализация accordion
+    var $accordion = $('#permissions-accordion');
+    
+    // Инициализация
+    $accordion.accordion({
+      exclusive: false,
+      animateChildren: false,
+      duration: 200,
+      collapsible: true
+    });
+    
+    
+    // === ГРУППОВЫЕ ОПЕРАЦИИ ===
+    
+    // 1. Выбрать все разрешения в группе (по ресурсу)
+    $('.select-resource').on('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation(); // Предотвращаем открытие/закрытие accordion
+      
+      var resource = $(this).data('resource');
+      $(`.permission-checkbox[data-resource="${resource}"]`).each(function() {
+        $(this).closest('.checkbox').checkbox('set checked');
+      });
+    });
+    
+    // 2. Снять все разрешения в группе (по ресурсу)
+    $('.clear-resource').on('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      var resource = $(this).data('resource');
+      $(`.permission-checkbox[data-resource="${resource}"]`).each(function() {
+        $(this).closest('.checkbox').checkbox('set unchecked');
+      });
+    });
+    
+    // 3. Выбрать все разрешения в scope
+    $('.select-scope').on('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      var resource = $(this).data('resource');
+      var scope = $(this).data('scope');
+      $(`.permission-checkbox[data-resource="${resource}"][data-scope="${scope}"]`).each(function() {
+        $(this).closest('.checkbox').checkbox('set checked');
+      });
+    });
+    
+    // 4. Снять все разрешения в scope
+    $('.clear-scope').on('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      var resource = $(this).data('resource');
+      var scope = $(this).data('scope');
+      $(`.permission-checkbox[data-resource="${resource}"][data-scope="${scope}"]`).each(function() {
+        $(this).closest('.checkbox').checkbox('set unchecked');
+      });
+    });
+    
+    // 5. Глобальные кнопки
+    $('#select-all-permissions').on('click', function() {
+      $('.permission-checkbox').each(function() {
+        $(this).closest('.checkbox').checkbox('set checked');
+      });
+    });
+    
+    $('#clear-all-permissions').on('click', function() {
+      $('.permission-checkbox').each(function() {
+        $(this).closest('.checkbox').checkbox('set unchecked');
+      });
+    });
+    
+    // Предотвращаем всплытие клика на кнопках внутри заголовка accordion
+    $('.select-resource, .clear-resource, .select-scope, .clear-scope').on('click', function(e) {
+      e.stopPropagation();
+    });
+  });
+  
+</script>

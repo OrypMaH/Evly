@@ -7,12 +7,13 @@ class ResponsiblePerson < ApplicationRecord
   validates :user_id, presence: true
   validates :role_id, presence: true
   
+  
   validates :user_id, uniqueness: { 
     scope: :event_id, 
     message: "уже назначен ответственным за это мероприятие" 
   }, unless: -> { event_id.nil? }
   
-  validate :role_belongs_to_user
+  validate :role_belongs_to_user, if: -> { role_id.present? }
   
   scope :for_event, ->(event_id) { where(event_id: event_id) }
   scope :with_user, -> { includes(:user) }

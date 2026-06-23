@@ -1,0 +1,190 @@
+<%# app/views/layouts/_broken_left_panel_form.html.erb %>
+
+<!-- Затемнение для мобильных -->
+<div id="menu-overlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 998;" onclick="closeMenu()"></div>
+
+<!-- Левое фиксированное меню -->
+<div class="ui grey inverted left fixed menu vertical large amgu-light-green" id="side-menu" style="overflow: auto; z-index: 999; transform: translateX(-100%); transition: transform 0.3s ease; width: 260px;">
+  
+  <!-- Кнопка закрытия -->
+  <div class="item" id="close-menu-btn" style="padding: 1em; cursor: pointer; text-align: right;">
+    <i class="icon close link launch orange large"></i>
+  </div>
+  
+  <a class="item ui small header" id="header_side" href="https://www.amursu.ru" target="_blank">
+    <img class="ui image" src="/assets/amsulogo.png">
+    <div class="content">Амурский<br>Государственный<br>Университет</div>
+  </a>
+  
+  <a class="item" data-turbolinks-action="replace" href="/">
+    <i class="icon home"></i>
+    Главная
+  </a>
+  
+  <a class="item" data-turbolinks-action="replace" href="/">
+    <i class="icon mail"></i>
+    Сообщения
+  </a>
+  
+  <a class="item" data-turbolinks-action="replace" href="/">
+    <i class="icon mail"></i>
+    Анкетирование
+  </a>
+  
+  <a class="item" data-turbolinks-action="replace" href="/">
+    <i class="icon travel"></i>
+    Портфолио
+  </a>
+  
+  <a class="item" data-turbolinks-action="replace" href="/">
+    <i class="icon calendar"></i>
+    Расписание
+  </a>
+  
+  <a class="item" data-turbolinks-action="replace" href="/">
+    <i class="icon university"></i>
+    Образовательные программы
+  </a>
+  
+  <a class="item" data-turbolinks-action="replace" href="/">
+    <i class="icon student"></i>
+    Учебный процесс
+  </a>
+  
+  <a class="item" href="/">
+    <i class="icon student"></i>
+    Зачетная книжка
+  </a>
+  
+  <a class="item" data-turbolinks-action="replace" href="/">
+    <i class="icon book"></i>
+    Библиотека
+  </a>
+  
+  <a class="item" data-turbolinks-action="replace" href="/">
+    <i class="icon gamepad"></i>
+    Киберспорт
+  </a>
+  
+  <a class="item" data-turbolinks-action="replace" href="/">
+    <i class="icon ruble sign"></i>
+    Повышенная стипендия
+  </a>
+  
+  <div class="divider"></div>
+  
+  <a class="item" rel="nofollow" data-method="delete" href="/users/sign_out">
+    <i class="sign out icon"></i>
+    Выход
+  </a>
+</div>
+
+<script>
+  // Функция открытия меню
+  function openMenu() {
+    var menu = document.getElementById('side-menu');
+    var overlay = document.getElementById('menu-overlay');
+    
+    if (menu) {
+      menu.style.transform = 'translateX(0)';
+      if (overlay) overlay.style.display = 'block';
+      document.body.style.overflow = 'hidden'; // Блокируем скролл body
+    }
+  }
+  
+  // Функция закрытия меню
+  function closeMenu() {
+    var menu = document.getElementById('side-menu');
+    var overlay = document.getElementById('menu-overlay');
+    
+    if (menu) {
+      menu.style.transform = 'translateX(-100%)';
+      if (overlay) overlay.style.display = 'none';
+      document.body.style.overflow = ''; // Восстанавливаем скролл
+    }
+  }
+  
+  // Инициализация при загрузке страницы
+  document.addEventListener('turbolinks:load', function() {
+    // Открытие меню по кнопке с классом 'launch icon item'
+    var launchBtn = document.querySelector('.launch.icon.item');
+    if (launchBtn) {
+      // Удаляем старый обработчик, чтобы не дублировался
+      var newLaunchBtn = launchBtn.cloneNode(true);
+      launchBtn.parentNode.replaceChild(newLaunchBtn, launchBtn);
+      
+      newLaunchBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        openMenu();
+      });
+    }
+    
+    // Закрытие по кнопке внутри меню
+    var closeBtn = document.getElementById('close-menu-btn');
+    if (closeBtn) {
+      var newCloseBtn = closeBtn.cloneNode(true);
+      closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+      
+      newCloseBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        closeMenu();
+      });
+    }
+    
+    // Закрытие по клавише Escape
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeMenu();
+      }
+    });
+    
+    // Закрытие при клике на пункт меню (опционально)
+    var menuItems = document.querySelectorAll('#side-menu .item:not(#close-menu-btn)');
+    menuItems.forEach(function(item) {
+      item.addEventListener('click', function() {
+        // Закрываем меню после перехода (с небольшой задержкой)
+        setTimeout(closeMenu, 200);
+      });
+    });
+  });
+  
+  // Обработка свайпа для закрытия на мобильных
+  var touchStartX = 0;
+  document.addEventListener('touchstart', function(e) {
+    touchStartX = e.touches[0].clientX;
+  });
+  
+  document.addEventListener('touchend', function(e) {
+    var menu = document.getElementById('side-menu');
+    var touchEndX = e.changedTouches[0].clientX;
+    
+    // Если меню открыто и свайп влево более 50px
+    if (menu && menu.style.transform === 'translateX(0px)' && (touchStartX - touchEndX) > 50) {
+      closeMenu();
+    }
+  });
+</script>
+
+<style>
+  /* Анимация для overlay */
+  #menu-overlay {
+    transition: opacity 0.3s ease;
+    opacity: 0;
+  }
+  
+  #menu-overlay[style*="display: block"] {
+    opacity: 1;
+  }
+  
+  /* Стили для мобильных */
+  @media only screen and (max-width: 767px) {
+    #side-menu {
+      width: 280px !important;
+    }
+    
+    #side-menu .item {
+      padding: 0.9em !important;
+      font-size: 0.95em;
+    }
+  }
+</style>

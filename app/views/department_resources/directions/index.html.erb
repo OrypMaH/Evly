@@ -13,7 +13,7 @@
         </div>
       </div>
     </h1>
-    <% if can?(:create, Direction.new) %>
+    <% if can?(:create, Direction.new(department: current_department)) %>
       <%= link_to 'Создать направление', 
           new_department_direction_path(@department), 
           class: "ui primary button" %>
@@ -27,7 +27,7 @@
           <i class="compass outline icon"></i>
           Нет созданных направлений
         </div>
-        <% if can?(:create, Direction.new) %>
+        <% if can?(:create, Direction.new(department: current_department)) %>
           <%= link_to 'Создать первое направление', 
               new_department_direction_path(@department), 
               class: "ui primary button" %>
@@ -39,10 +39,10 @@
           <div class="ui card">
             <div class="content">
               <div class="header">
-                <%= direction.name %>
+                <%= link_to_direction(direction) %>
               </div>
               <div class="meta">
-                <span class="date">Создано: <%= direction.created_at %></span>
+                <span class="date">Создано в: <%= direction.department.name %></span>
               </div>
               <div class="description">
                 <% if direction.description.present? %>

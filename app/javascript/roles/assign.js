@@ -127,21 +127,9 @@ export function initRoleAssignmentModal() {
         'X-CSRF-Token': document.querySelector('[name="csrf-token"]').content
       },
       body: JSON.stringify({ user_id: selectedUserId })
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        alert(data.message);
+    });
         $('#assignRoleModal').modal('hide');
         setTimeout(() => location.reload(), 1000);
-      } else {
-        alert('Ошибка: ' + data.message);
-      }
-    })
-    .catch(error => {
-      console.error('Error:', error);
-      alert('Произошла ошибка при назначении роли');
-    });
   });
   
   // Сброс состояния

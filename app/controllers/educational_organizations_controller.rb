@@ -1,5 +1,6 @@
 class EducationalOrganizationsController < ApplicationController
-    before_action :store_referer, only: [:create ]
+  before_action :authenticate_user!
+  before_action :store_referer, only: [:create ]
   def new
 
   end

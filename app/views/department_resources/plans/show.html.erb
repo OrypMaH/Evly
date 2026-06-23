@@ -1,83 +1,225 @@
 <%# app/views/plans/show.html.erb %>
+
+<!-- Заголовок в стиле АмГУ -->
 <div class="ui container">
-  <div class="ui segment">
-    <h1 class="ui header">
+  <h3 class="ui header orange" style="margin-top: 1em;">
+    <i class="bordered inverted orange icon calendar alternate"></i>
+    <div class="content">
       <%= @plan.title %>
       <div class="sub header">
-        Период: <%= @plan.start_date.strftime('%d.%m.%Y') %> - <%= @plan.end_date.strftime('%d.%m.%Y') %>
-        <% if @plan.ongoing? %>
-          <span class="ui green horizontal label">Активен</span>
-        <% elsif @plan.upcoming? %>
-          <span class="ui blue horizontal label">Предстоящий</span>
-        <% else %>
-          <span class="ui grey horizontal label">Завершен</span>
-        <% end %>
+        Подразделение: <%= link_to_department @plan.department %>
       </div>
-    </h1>
+    </div>
+  </h3>
+
+  <!-- Верхняя навигационная панель (зеленая) -->
+  <div class="ui grey inverted menu top attached" style="background: #016559 !important; border-radius: 8px 8px 0 0 !important;">
+    <%= link_to department_plans_path(@plan.department), class: 'item' do %>
+      <i class="arrow left icon"></i> К списку планов
+    <% end %>
     
+    <span class="item">
+      <i class="calendar outline icon"></i>
+      <%= @plan.start_date.strftime('%d.%m.%Y') %> - <%= @plan.end_date.strftime('%d.%m.%Y') %>
+    </span>
+    
+    <div class="right menu">
+      <% if can?(:update, @plan) %>
+        <%= link_to edit_department_plan_path(@plan.department, @plan), class: 'item' do %>
+          <i class="edit icon"></i> Редактировать
+        <% end %>
+      <% end %>
+      
+      <% if can?(:delete, @plan) %>
+        <%= link_to @plan, 
+              method: :delete,
+              class: 'item',
+              data: { confirm: "Удалить план '#{@plan.title}'? Все мероприятия будут удалены из плана." } do %>
+          <i class="trash icon"></i> Удалить
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Основной контент -->
+  <div class="ui bottom attached segment" style="padding: 1.5em;">
+    <div class="ui cards">
+      <div class="card">
+        <div class="content">
+          <div class="header"><%= link_to_user @plan.creator %></div>
+          <div class="description">
+                Создатель
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="content">
+          <div class="header">
+              <i class="calendar check icon"></i><%= @plan.plan_events.count %>
+          </div>
+          <div class="description">Количество мероприятий</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="content">
+          <div class="header">Период</div>
+          <div class="description"><span><i class="calendar check outline icon"></i> Окончание: <%= @plan.end_date.strftime('%d.%m.%Y') %></span></div>
+          <div class="description"><span><i class="calendar outline icon"></i> Начало: <%= @plan.start_date.strftime('%d.%m.%Y') %></span></div>
+        </div>
+      </div>
+    </div>
+    <!-- Описание плана (если есть) -->
     <% if @plan.description.present? %>
-      <div class="ui segment">
-        <h3 class="ui header">Описание плана</h3>
+      <div class="ui segment" style="background: #f0f8ff; margin-top: 1em;">
+        <h4 class="ui header">
+          <i class="file alternate outline icon"></i>
+          Описание плана
+        </h4>
         <p><%= simple_format(@plan.description) %></p>
       </div>
     <% end %>
     
-    <div class="ui three statistics">
-      <div class="statistic">
-        <div class="value">
-          <i class="building icon"></i>
-          <%= @plan.department.name %>
-        </div>
-        <div class="label">Подразделение</div>
-      </div>
-      <div class="statistic">
-        <div class="value">
-          <i class="user icon"></i>
-          <%= @plan.creator.surname %> <%= @plan.creator.name.first %>.
-        </div>
-        <div class="label">Создатель</div>
-      </div>
-      <div class="statistic">
-        <div class="value">
-          <i class="calendar check icon"></i>
-          <%= @plan.plan_events.count %>
-        </div>
-        <div class="label">Мероприятий в плане</div>
-      </div>
-    </div>
-    
     <!-- Секция с мероприятиями -->
-    <div class="ui segment">
-      <div class="ui two column grid">
-        <div class="column">
-          <h3 class="ui header">
-            <i class="calendar icon"></i>
-            Мероприятия в плане
-          </h3>
-        </div>
-        <div class="column right aligned">
-          <% if can?(:add_event, @plan.department) %>
-            <%= link_to add_events_plan_path(@plan), class: 'ui primary button' do %>
-              <i class="plus icon"></i> Добавить мероприятия
-            <% end %>
-          <% end %>
-          <% if can?(:update, @plan) %>
-            <%= link_to edit_department_plan_path(@plan), class: 'ui button' do %>
-              <i class="edit icon"></i> Редактировать план
-            <% end %>
-          <% end %>
-        </div>
-      </div>
-      
+    <div style="margin-top: 2em;">
       <% if @plan.plan_events.any? %>
-        <%= render partial: 'events_table', 
-                   locals: { plan_events: @plan.plan_events.includes(event_department: [:event, :department]).order(:position) } %>
+        <!-- Таблица мероприятий в компактном стиле -->
+        <table class="ui small compact celled table">
+          <thead>
+            <tr>
+              <th class="center aligned" style="width: 5%;">№</th>
+              <th style="width: 20%;">Мероприятие</th>
+              <th style="width: 10%;">Уровень</th>
+              <th style="width: 12%;">Период</th>
+              <th style="width: 10%;">Направление</th>
+              <th style="width: 10%;">Ответственные</th>
+              <th style="width: 8%;">Статус</th>
+              <th style="width: 8%;">Участников</th>
+              <th style="width: 7%;">Действия</th>
+            </tr>
+          </thead>
+          
+          <tbody>
+            <% @plan.plan_events.includes(event_department: [:event, :department]).order(:position).each_with_index do |plan_event, index| %>
+              <% event = plan_event.event_department.event %>
+              <tr>
+                <td class="center aligned">
+                  <span class="ui circular mini basic label"><%= index + 1 %></span>
+                </td>
+                
+                <td>
+                  <div class="ui small header" style="margin: 0;">
+                    <div class="content">
+                      <%= link_to event.title, event_path(event), class: 'amgu-green-title-text' %>
+                    </div>
+                  </div>
+                </td>
+                
+                <td>
+                  <span class="ui tiny label level-<%= event.level.name.parameterize %>">
+                    <%= event.level.name %>
+                  </span>
+                </td>
+                
+                <td>
+                  <div style="font-size: 0.9em;">
+                    <i class="calendar outline icon"></i>
+                    <%= event.start_date.strftime('%d.%m.%Y') %>
+                  </div>
+                  <% if event.end_date && event.end_date != event.start_date %>
+                    <div style="font-size: 0.9em; margin-top: 0.2em;">
+                      <i class="calendar check outline icon"></i>
+                      <%= event.end_date.strftime('%d.%m.%Y') %>
+                    </div>
+                  <% end %>
+                </td>
+                
+                <td>
+                  <div style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" 
+                        data-tooltip="<%= event.direction&.name %>" data-position="top left">
+                    <i class="compass icon"></i>
+                    <%= event.direction&.name&.truncate(30) || '—' %>
+                  </div>
+                </td>
+                
+                <td>
+                  <div class="ui mini labels">
+                    <% event.responsible_people.each do |person| %>
+                      <div class="ui basic mini label" 
+                            data-tooltip="<%= person.user.full_name %> - <%= person.role.name %>" 
+                            data-position="top center">
+                        <i class="user icon"></i>
+                        <%= person.user.surname %>
+                      </div>
+                    <% end %>
+                    <% if event.responsible_people.empty? %>
+                      <span class="ui grey mini label">—</span>
+                    <% end %>
+                  </div>
+                </td>
+                
+                <td class="center aligned">
+                  <span class="ui grey mini label">
+                    <i class="clock icon"></i> Запланировано
+                  </span>
+                </td>
+                
+                <td class="center aligned">
+                  <div class="ui teal circular mini label">
+                    <%= event.people %>
+                  </div>
+                </td>
+                
+                <td class="center aligned">
+                  <div class="ui mini buttons">
+                    <%= link_to event_path(event), class: 'ui icon button', data: { tooltip: 'Просмотреть' } do %>
+                      <i class="eye icon"></i>
+                    <% end %>
+                    
+                    <% if can?(:update, plan_event) %>
+                      <%= link_to '#', class: 'ui icon button', data: { tooltip: 'Изменить статус' } do %>
+                        <i class="sync icon"></i>
+                      <% end %>
+                    <% end %>
+                    
+                    <% if can?(:remove_event, @plan) %>
+                      <%= link_to plan_event_path(plan_event), 
+                            method: :delete,
+                            class: 'ui icon button negative',
+                            data: { 
+                              confirm: 'Удалить мероприятие из плана?',
+                              tooltip: 'Удалить из плана' 
+                            } do %>
+                        <i class="times icon"></i>
+                      <% end %>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+        
+        <!-- Кнопка добавления еще (если есть права) -->
+        <% if can?(:add_event, @plan.department) %>
+          <div style="margin-top: 1em; text-align: center;">
+            <%= link_to add_events_plan_path(@plan), class: 'ui basic button' do %>
+              <i class="plus icon"></i> Добавить еще мероприятия
+            <% end %>
+          </div>
+        <% end %>
+        
       <% else %>
-        <div class="ui info message">
-          <div class="header">В плане пока нет мероприятий</div>
-          <p>Добавьте мероприятия, чтобы начать работу с планом.</p>
+        <!-- Пустое состояние для мероприятий -->
+        <div class="ui placeholder segment" style="background: #f9f9f9; border: 2px dashed #ccc; margin-top: 1em;">
+          <div class="ui icon header" style="color: #666;">
+            <i class="calendar outline icon" style="color: #016559;"></i>
+            В плане пока нет мероприятий
+          </div>
+          <p style="color: #888; margin: 1em 0;">
+            Добавьте мероприятия, чтобы начать работу с планом.
+          </p>
           <% if can?(:add_event, @plan.department) %>
-            <%= link_to add_events_plan_path(@plan), class: 'ui primary button' do %>
+            <%= link_to department_events_path(@plan.department), class: 'ui primary button' do %>
               <i class="plus icon"></i> Добавить мероприятия
             <% end %>
           <% end %>
@@ -85,29 +227,57 @@
       <% end %>
     </div>
     
-    <div class="ui segment">
-      <div class="ui buttons">
-        <%= link_to department_plans_path(@department), class: 'ui button' do %>
-          <i class="arrow left icon"></i> К списку планов
-        <% end %>
-        
-        <% if can?(:add_event, @plan.department) && @plan.plan_events.any? %>
-          <%= link_to add_events_plan_path(@plan), class: 'ui button' do %>
-            <i class="plus icon"></i> Добавить ещё
-          <% end %>
-        <% end %>
-        
-        <% if can?(:delete, @plan) %>
-          <%= link_to @plan, 
-                method: :delete,
-                class: 'ui red button',
-                data: { 
-                  confirm: "Удалить план '#{@plan.title}'? Все мероприятия будут удалены из плана." 
-                } do %>
-            <i class="trash icon"></i> Удалить план
-          <% end %>
-        <% end %>
+    <!-- Дополнительная информация (история, комментарии) -->
+    <div style="margin-top: 2em;">
+      <div class="ui top attached tabular menu">
+        <a class="active item" data-tab="info">
+          <i class="info circle icon"></i> Информация
+        </a>
+        <a class="item" data-tab="history">
+          <i class="history icon"></i> История изменений
+        </a>
+        <a class="item" data-tab="stats">
+          <i class="chart bar icon"></i> Статистика
+        </a>
+      </div>
+      
+      <div class="ui bottom attached active tab segment" data-tab="info">
+        <div class="ui list">
+          <div class="item">
+            <i class="calendar icon"></i>
+            <div class="content">
+              <div class="header">Дата создания</div>
+              <div class="description"><%= @plan.created_at.strftime('%d.%m.%Y в %H:%M') %></div>
+            </div>
+          </div>
+          <div class="item">
+            <i class="sync icon"></i>
+            <div class="content">
+              <div class="header">Последнее обновление</div>
+              <div class="description"><%= @plan.updated_at.strftime('%d.%m.%Y в %H:%M') %></div>
+            </div>
+          </div>
+          <div class="item">
+            <i class="building icon"></i>
+            <div class="content">
+              <div class="header">Подразделение</div>
+              <div class="description"><%= @plan.department.name %></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="ui bottom attached tab segment" data-tab="history">
+        <p>История изменений будет доступна позже.</p>
+      </div>
+      
+      <div class="ui bottom attached tab segment" data-tab="stats">
+        <p>Статистика будет доступна позже.</p>
       </div>
     </div>
   </div>
 </div>
+
+<% content_for :javascript_packs do %>
+  <%= javascript_pack_tag 'plans' %>
+<% end %>

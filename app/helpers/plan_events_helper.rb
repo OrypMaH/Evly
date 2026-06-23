@@ -30,16 +30,7 @@ module PlanEventsHelper
   # Рендерим статус мероприятия в плане
   def render_plan_event_status(plan_event)
     event = plan_event.event_department.event
-    ed = plan_event.event_department
     
-    status_badge = case ed.status
-    when 'approved'
-      content_tag(:span, 'Утверждено', class: 'ui green horizontal label')
-    when 'offered'
-      content_tag(:span, 'Предложено', class: 'ui yellow horizontal label')
-    else
-      content_tag(:span, 'Неизвестно', class: 'ui grey horizontal label')
-    end
     
     period_badge = if event.ongoing?
       content_tag(:span, 'Идет сейчас', class: 'ui red horizontal label')
@@ -49,7 +40,7 @@ module PlanEventsHelper
       content_tag(:span, 'Завершено', class: 'ui grey horizontal label')
     end
     
-    safe_join([status_badge, period_badge], ' ')
+    safe_join([period_badge], ' ')
   end
   
   # Рендерим информацию о мероприятии для таблицы
@@ -70,7 +61,7 @@ module PlanEventsHelper
       concat(content_tag(:div, class: 'item') do
         concat(content_tag(:i, '', class: 'calendar icon'))
         concat(content_tag(:div, class: 'content') do
-          content_tag(:div, event.period_text, class: 'description')
+          content_tag(:div, format_event_period(event.start_date, event.end_date), class: 'description')
         end)
       end)
     end

@@ -6,7 +6,7 @@ class EventsController < ApplicationController
   
   def destroy
   # Сначала проверяем права, потом ищем мероприятие 
-      if abac_engine.can?(:delete, @event)
+      if can?(:delete, @event)
           @event.destroy
           redirect_to stored_referer, notice: "Мероприятие удалено"
       else
@@ -19,20 +19,22 @@ class EventsController < ApplicationController
       @directions = current_user.direction_list
   end
   def show
-  end# app/controllers/events_controller.rb
-def update
-  if abac_engine.can?(:update, @event)
-    # Обновляем основные атрибуты мероприятия
-    if @event.update(event_params)
-      redirect_to stored_referer, notice: "Мероприятие обновлено"
-    else
-      redirect_to stored_referer, alert: "Что-то пошло не так: #{@event.errors.full_messages.join(', ')}"
-    end
-    
-  else
-    redirect_to stored_referer, alert: "Недостаточно прав для редактирования этого мероприятия"
+      authorize_action(:view, @event)
   end
-end
+
+  def update
+    if can?(:update, @event)
+      # Обновляем основные атрибуты мероприятия
+      if @event.update(event_params)
+        redirect_to stored_referer, notice: "Мероприятие обновлено"
+      else
+        redirect_to stored_referer, alert: "Что-то пошло не так: #{@event.errors.full_messages.join(', ')}"
+      end
+      
+    else
+      redirect_to stored_referer, alert: "Недостаточно прав для редактирования этого мероприятия"
+    end
+  end
 
   def new
       @event = Event.new(educational_organization: EducationalOrganization.first())
@@ -43,16 +45,19 @@ end
   def create
       @event = Event.new(event_params.except(:responsible_people_attributes))
       @event.creator=current_user
-      authorize_action(:create, @event)
-      if params[:event][:responsible_people_attributes].present?
-        params[:event][:responsible_people_attributes].each do |_, rp_params|
-          next if rp_params[:_destroy] == '1'
-          
-          @event.responsible_people.build(
-            user_id: rp_params[:user_id],
-            role_id: rp_params[:role_id]
-          )
+      if can?(:create, @event)
+        if params[:event][:responsible_people_attributes].present?
+          params[:event][:responsible_people_attributes].each do |_, rp_params|
+            next if rp_params[:_destroy] == '1'
+            
+            @event.responsible_people.build(
+              user_id: rp_params[:user_id],
+              role_id: rp_params[:role_id]
+            )
+          end
         end
+      else
+        redirect_to stored_referer, alert: "Недостаточно прав для редактирования этого мероприятия"
       end
       if @event.save
           redirect_to stored_referer || department_events_path(current_user.department)
@@ -142,11 +147,12 @@ end
     
     { successful: successful, errors: errors }
   end
-  #???
+
   def can_offer_to_department?(event, department)
     temp_ed = OfferedEventDepartment.new(event: event, department: department)
     can?(:offer, temp_ed)
   end
+  
   def set_event
       @event = Event.find(params[:id])
   end

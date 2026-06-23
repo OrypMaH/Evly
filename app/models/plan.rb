@@ -31,6 +31,33 @@ class Plan < ApplicationRecord
     def past?
         end_date < Time.current
     end
+    def progress_percentage
+      return 0 if start_date > Date.current
+      return 100 if end_date < Date.current
+      
+      total_days = (end_date - start_date).to_i
+      passed_days = (Date.current - start_date).to_i
+      ((passed_days.to_f / total_days) * 100).round
+    end
+    
+    def status_text
+      if active?
+        'Активный'
+      elsif upcoming?
+        'Предстоящий'
+      else
+        'Завершенный'
+      end
+    end
+    
+    def progress_percentage
+      return 0 if start_date > Date.current
+      return 100 if end_date < Date.current
+      
+      total_days = (end_date - start_date).to_i
+      passed_days = (Date.current - start_date).to_i
+      ((passed_days.to_f / total_days) * 100).round
+    end
   private
   
   def end_date_after_start_date

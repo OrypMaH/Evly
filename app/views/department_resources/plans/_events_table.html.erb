@@ -19,7 +19,7 @@
           <div class="ui small label"><%= index + 1 %></div>
         </td>
         <td>
-          <strong><%= plan_event.event_department.event.title %></strong>
+          <strong><%= link_to_event(plan_event.event_department.event)%></strong>
           <% if plan_event.event_department.event.description.present? %>
             <div class="ui small text" style="margin-top: 5px;">
               <%= truncate(plan_event.event_department.event.description, length: 100) %>

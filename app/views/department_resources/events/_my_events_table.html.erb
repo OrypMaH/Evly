@@ -1,78 +1,43 @@
-<%# app/views/events/_my_events_table.html.erb %>
-<table class="ui celled table">
-  <thead>
-    <tr>
-      <th class="center aligned">ID</th>
-      <th>Название</th>
-      <th>Наименование ООВО</th>
-      <th>Уровень</th>
-      <th>Формат</th>
-      <th>Направление</th>
-      <th class="center aligned">Период проведения</th>
-      <th>Описание</th>
-      <th>Статусы подразделений</th>
-      <th class="center aligned">Всего участников</th>
-      <th class="center aligned">Дата создания</th>
-      <th class="center aligned">Ответственные</th>
-      <th class="center aligned">Действия</th>
-    </tr>
-  </thead>
-  
-  <tbody>
-    <% events.each do |event| %>
+<div class="ui segment" style="padding: 0; overflow-x: auto;">
+  <table class="ui small compact celled table">
+    <thead>
       <tr>
-        <td class="center aligned"><%= event.id %></td>
-        <td><strong><%= event.title %></strong></td>
-        <td><strong><%= event.educational_organization.name %></strong></td>
-        <td><strong><%= event.level.name %></strong></td>
-        <td><strong><%= event.format %></strong></td>
-        <td><%= format_direction(event.direction) %></td>
-        
-        <td class="center aligned">
-          <%= format_event_period(event.start_date, event.end_date) %>
-          <% if event.ongoing? %>
-            <div class="ui green horizontal label">Сейчас</div>
-          <% elsif event.upcoming? %>
-            <div class="ui blue horizontal label">Скоро</div>
-          <% else %>
-            <div class="ui grey horizontal label">Завершено</div>
-          <% end %>
-        </td>
-        <td><%= truncate(event.description, length: 100) %></td>
-        <td>
-          <div class="ui small labels">
-            <% event.event_departments.each do |ed| %>
-              <div class="ui <%= ed.status %> label">
-                <%= ed.department.name.truncate(10) %>
-                <div class="detail">
-                  <% if ed.status == 'approved' %>
-                    <%= ed.participants_count %>
-                  <% end %>
-                </div>
-              </div>
-            <% end %>
-            <% if event.event_departments.empty? %>
-              <span class="ui grey label">Нет участий</span>
-            <% end %>
-          </div>
-        </td>
-        <td class="center aligned">
-          <div class="ui teal circular label">
-            <%= event.people %>
-          </div>
-        </td>
-        <td class="center aligned">
-          <%= event.created_at.strftime('%d.%m.%Y') %>
-        </td>
-        <td class="center aligned">
-          <% event.responsible_people&.each_with_index do |person, index| %>
-            <%= person.description %><% if index < event.responsible_people.size - 1 %><br><% end %>
-          <% end %>
-        </td>
-        <td class="center aligned">
-          <%= render_event_buttons(event) %>
-        </td>
+        <th class="center aligned">ID</th>
+        <th>Название</th>
+        <th>ООВО</th>
+        <th>Уровень</th>
+        <th>Формат</th>
+        <th>Направление</th>
+        <th class="center aligned">Период проведения</th>
+        <th>Статусы подразделений</th>
+        <th class="center aligned">Участники</th>
+        <th class="center aligned">Ответственные</th>
+        <th class="center aligned">Действия</th>
       </tr>
-    <% end %>
-  </tbody>
-</table>
+    </thead>
+    
+    <tbody>
+      <% events.each do |event| %>
+        <tr>
+          <td class="center aligned"><%= event.id %></td>
+          <td class="title-column"><div class="title-text"><%= event.title %></div></td>
+          <td><%= event.educational_organization.name %></td>
+          <td><span class="ui tiny label level-<%= event.level.name.parameterize %>"><%= event.level.name %></span></td>
+          <td><%= event.format %></td>
+          <td><%= link_to_direction(event.direction, format_direction(event.direction)) %></td>
+          <td class="center aligned"><%= format_event_period(event.start_date, event.end_date) %></td>
+          <td>
+            <div class="ui mini labels">
+              <% event.event_departments.each do |ed| %>
+                <div class="ui <%= ed.status %> label"><%= link_to_department(ed.department) %></div>
+              <% end %>
+            </div>
+          </td>
+          <td class="center aligned"><div class="ui teal circular mini label"><%= event.people %></div></td>
+          <td class="center aligned"><%= render_responsible_labels(event) %></td>
+          <td class="center aligned"><%= render_event_buttons(event) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

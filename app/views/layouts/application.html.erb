@@ -1,145 +1,128 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Evly</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <%= csrf_meta_tags %>
-    <%= csp_meta_tag %>
+<head>
+  <title>Планирование - АмГУ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <meta name="theme-color" content="#016559">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
 
-    <%= stylesheet_link_tag 'application', media: 'all', 'data-turbolinks-track': 'reload' %>
-    <%= javascript_pack_tag 'application', 'data-turbolinks-track': 'reload' %>
-
+  <!-- Semantic UI и кастомные стили -->
+  <%= stylesheet_link_tag 'application', media: 'all', 'data-turbolinks-track': 'reload' %>
+  <%= javascript_pack_tag 'application', 'data-turbolinks-track': 'reload' %>
+  
+  <!-- Font Awesome для иконок -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  
+  <style>
+    .amgu-green {
+      background: #016559 !important;
+    }
+    .amgu-light-green {
+      background: #00796b !important;
+    }
+    .amgu-green-title-text {
+      color: #016559;
+      font-weight: 600;
+    }
     
-  </head>
+    .amgu-green-title-text:hover {
+      text-decoration: underline;
+    }
+    
+    @media only screen and (max-width: 767px) {
+      .ui.main.container {
+        width: 100% !important;
+        padding-left: 0.5em !important;
+        padding-right: 0.5em !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+      }
+      
+      .ui.segment.basic {
+        padding: 0 !important;
+      }
+      
+      .ui.secondary.fixed.main.menu {
+        position: sticky !important;
+        top: 0;
+      }
+      
+    }
+    .smart-link {
+      color: inherit;
+      text-decoration: none;
+    }
 
-  <body>
-    <div class="ui fixed inverted menu">
-      <div class="ui container">
-        <%= link_to 'Главная', root_path, class: 'header item' %>
-        
-        <% if user_signed_in? && current_user.department %>
-          <%= link_to department_plans_path(current_user.department.id), class: 'item' do %>
-            <i class="calendar alternate icon"></i>
-            Планирование
-          <% end %>
-        <%= link_to 'Мероприятия', department_events_path(current_user.department.id), class: 'item' %>
+    .smart-link:hover {
+      text-decoration: underline;
+      color: inherit;
+      opacity: 0.8;
+    }
+
+    .smart-link-wrapper {
+      display: inline-block;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="pusher ui personal-column">
+    <div class="ui segment basic" style="padding: 0; margin: 0;">
+      <%= render 'layouts/amgu_taken_user_panel_form' %>
+      
+      <div class="ui main container" style="margin-top: 4em;">
+      </div>
+      
+      <% if user_signed_in? %>
+        <%= render 'layouts/planning_nav_menu_form' %>
+        <%= render 'layouts/user_info_panel_form' %>
+      <% end %>
+
+      <!-- Flash сообщения -->
+      <div class="ui main container" style="margin-top: 1em;">
+        <% flash.each do |key, message| %>
+          <% message_class = case key.to_s
+                            when 'notice' then 'success'
+                            when 'alert'  then 'warning'
+                            when 'error'  then 'error'
+                            else key.to_s
+                            end %>
+          
+          <div class="ui <%= message_class %> message flash-message">
+            <i class="close icon"></i>
+            <div class="header">
+              <%= message %>
+            </div>
+          </div>
         <% end %>
-        
-        
-        <% if user_signed_in? %>
-          <% if current_user.current_role %>
-            <div class="ui dropdown item">
-              <i class="cog icon"></i>
-              <%= current_user.current_role.department.name %>
-              <i class="dropdown icon"></i>
-              <div class="menu">
-                <%= link_to department_users_path(current_user.department.id), class: 'item' do %>
-                  <i class="users icon"></i>
-                  Сотрудники
-                <% end %>
-                
-                <%= link_to department_roles_path(current_user.department.id), class: 'item' do %>
-                  <i class="user shield icon"></i>
-                  Управление ролями
-                <% end %>
+      </div>
 
-                <%= link_to departments_path, class: 'item' do %>
-                  <i class="sitemap icon"></i>
-                  Подразделения
-                <% end %>
+      <% flash.clear %>
+      
+      <script>
+        document.addEventListener('turbolinks:load', function() {
+          $('.flash-message .close').on('click', function() {
+            $(this).closest('.message').transition('fade');
+          });
+          
+          // Автоматическое скрытие flash-сообщений через 5 секунд
+          setTimeout(function() {
+            $('.flash-message').transition('fade');
+          }, 5000);
+        });
+      </script>
 
-                <%= link_to department_directions_path(current_user.department.id), class: 'item' do %>
-                  <i class="sitemap icon"></i>
-                  Направления ВР
-                <% end %>
-                
-
-                <div class="divider"></div>
-                <%= link_to '#', class: 'item' do %>
-                  <i class="chart bar icon"></i>
-                  Статистика
-                <% end %>
-              </div>
-            </div>
-          <% end %>
-        <% end %>
-        
-        <div class="right menu">
-          <% if user_signed_in? %>
-            <div class="ui dropdown item">
-              <i class="id card icon"></i>
-              <span class="text">
-                <%= current_user.current_role&.name&.truncate(35) || "Роль..." %>
-              </span>
-              <i class="dropdown icon"></i>
-              <div class="menu">
-                <div class="header">
-                  <i class="user secret icon"></i>
-                  Выберите роль
-                </div>
-                <% current_user.roles.each do |role| %>
-                  <%= link_to select_current_role_user_path(current_user, role_id: role.id), 
-                              method: :post, 
-                              class: "item #{'active' if role == current_user.current_role}",
-                              data: { turbo: false } do %>
-                    <% if role == current_user.current_role %>
-                      <i class="check circle icon green"></i>
-                    <% else %>
-                      <i class="circle outline icon"></i>
-                    <% end %>
-                    <%= role.name.truncate(35) %>
-                  <% end %>
-                <% end %>
-                
-                <% if current_user.roles.empty? %>
-                  <div class="item disabled">
-                    <i class="ban icon"></i>
-                    Нет ролей
-                  </div>
-                <% end %>
-              </div>
-            </div>
-
-            <div class="ui dropdown item">
-              <i class="user icon"></i>
-              <%= current_user.name %>
-              <i class="dropdown icon"></i>
-              <div class="menu">
-                <%= link_to edit_roles_user_path(current_user), class: 'item' do %>
-                  <i class="edit icon"></i>
-                  Выбрать роли
-                <% end %>
-                <div class="divider"></div>
-                <%= link_to session_path, 
-                            data: { method: :delete }, 
-                            class: 'item' do %>
-                  <i class="sign out icon"></i>
-                  Выход
-                <% end %>
-              </div>
-            </div>
-          <% else %>
-            <%= link_to 'Регистрация', new_user_path, class: 'item' %>
-            <%= link_to 'Авторизация', new_session_path, class: 'item' %>
-          <% end %>
-        </div>
+      <!-- Основной контент страницы -->
+      <div class="ui main container" style="margin-top: 1em; margin-bottom: 2em;">
+        <%= yield %>
       </div>
     </div>
-        
-    <div class="ui main container" style="margin-top: 4em;">
-      <% flash.each do |key, message| %>
-        <div class="ui <%= key %> message">
-          <i class="close icon"></i>
-          <div class="header">
-            <%= message %>
-          </div>
-        </div>
-      <% end %>
-    </div>
-    
-    <div class="ui main container" style="margin-top: 1em;">
-      <%= yield %>
-    </div>
-    <%= yield :javascript_packs %>
-  </body>
+  </div>
+  
+  <%= yield :javascript_packs %>
+</body>
 </html>

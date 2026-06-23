@@ -1,4 +1,5 @@
 class ApprovedEventDepartmentsController < ApplicationController
+  before_action :authenticate_user!
   before_action :store_referer, only: [:approve, :reject]
   def approve
     @approved = ApprovedEventDepartment.find(params[:id])

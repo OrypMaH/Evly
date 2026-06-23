@@ -6,27 +6,41 @@ module DepartmentResources
       @directions = @department.direction_tree
     end
     def show
-
+      authorize_action(:show, @direction)
     end        
     def new
       @direction = Direction.new(
         department: @department,
         name: ""
       )
+      authorize_action(:create, @direction)
     end
     def create
       @direction = Direction.new(direction_params)
-      if @direction.save
-        redirect_to department_directions_path(@direction.department), notice: 'Направление успешно создано'
+      if can?(:create, @direction)
+        if @direction.save
+          redirect_to department_directions_path(@direction.department), notice: 'Направление успешно создано'
+        else
+          render :new
+        end
       else
-        render :new
+        redirect_to stored_referer, alert: "Недостаточно прав для редактирования этого подразделения"
       end
     end
+
+    def edit
+      authorize_action(:edit,@direction)
+    end
+
     def update
-      if @direction.update(direction_params)
-        redirect_to department_directions_path(@direction.department), notice: 'Подразделение успешно обновлено'
+      if can?(:edit, @direction)
+        if @direction.update(direction_params)
+          redirect_to department_directions_path(@direction.department), notice: 'Подразделение успешно обновлено'
+        else
+          render :edit
+        end
       else
-        render :edit
+        redirect_to stored_referer, alert: "Недостаточно прав для редактирования этого подразделения"
       end
     end
     

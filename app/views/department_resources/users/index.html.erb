@@ -20,7 +20,7 @@
         <% @users.each do |user| %>
           <tr>
             <td>
-              <strong><%= user.full_name %></strong>
+              <strong><%= link_to_user(user) %></strong>
             </td>
             <td>
               <div class="ui horizontal list">
@@ -41,7 +41,7 @@
               <% end %>
             </td>
             <td>
-              <%= link_to edit_roles_user_path(user), class: 'ui small primary button' do %>
+              <%= link_to department_user_edit_roles_path(user.current_department, user), class: 'ui small primary button' do %>
                 <i class="edit icon"></i>
                 Назначить роли
               <% end %>

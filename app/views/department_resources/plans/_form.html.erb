@@ -38,8 +38,8 @@
     <div class="ui message">
       <div class="header">Информация</div>
       <p>
-        План создается для подразделения: <strong><%= current_user.current_department.name %></strong><br>
-        Создатель: <strong><%= current_user.full_name %></strong>
+        План создается для подразделения: <strong><%= link_to_department(@plan.department) %></strong><br>
+        Создатель: <strong><%= link_to_user(@plan.creator) %></strong>
       </p>
     </div>
   </div>

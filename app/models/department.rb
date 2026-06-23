@@ -54,6 +54,16 @@ class Department < ApplicationRecord
       "#{parent.full_path} -> #{name}"
     end
   end
+  def tree_to_root
+    if parent
+      parent.tree_to_root + [self]
+    else
+      [self]
+    end
+  end
+  def full_tree
+    (tree_to_root + tree).uniq
+  end
 
   def self.root
     find_by(parent_id: nil)

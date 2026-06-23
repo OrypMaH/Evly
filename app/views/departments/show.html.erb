@@ -1,244 +1,304 @@
 <%# app/views/departments/show.html.erb %>
+
+<!-- Заголовок в стиле АмГУ -->
 <div class="ui container">
   <!-- Хлебные крошки -->
-  <div class="ui breadcrumb">
+  <div class="ui breadcrumb" style="margin: 1em 0;">
     <%= link_to 'Подразделения', departments_path, class: 'section' %>
     <i class="right angle icon divider"></i>
-    <% @department.ancestors.reverse.each do |ancestor| %>
+    <% @department.ancestors.each do |ancestor| %>
       <%= link_to ancestor.name, department_path(ancestor), class: 'section' %>
       <i class="right angle icon divider"></i>
     <% end %>
     <div class="active section"><%= @department.name %></div>
   </div>
-  
-  <div class="ui segment">
-    <!-- Заголовок -->
-    <div class="ui grid">
-      <div class="twelve wide column">
-        <h1 class="ui header">
-          <%= @department.name %>
-          <% if @department.description.present? %>
-            <div class="sub header"><%= @department.description %></div>
-          <% end %>
-        </h1>
-      </div>
-      <div class="four wide column right aligned">
-        <% if can?(:edit, @department) %>
-          <%= link_to edit_department_path(@department), class: 'ui icon button' do %>
-            <i class="edit icon"></i> Редактировать
-          <% end %>
+
+  <!-- Верхняя навигационная панель (зеленая) -->
+  <div class="ui amgu-green inverted menu top attached" style="border-radius: 8px 8px 0 0 !important;">
+    <%= link_to departments_path, class: 'item' do %>
+      <i class="arrow left icon"></i> К списку подразделений
+    <% end %>
+    
+    <span class="item">
+      <i class="sitemap icon"></i>
+      <%= @department.name %>
+    </span>
+    
+    <div class="right menu">
+      <% if can?(:edit, @department) %>
+        <%= link_to edit_department_path(@department), class: 'item' do %>
+          <i class="edit icon"></i> Редактировать
         <% end %>
-      </div>
-    </div>
-    
-    <!-- Основная информация -->
-    <div class="ui divider"></div>
-    
-    <div class="ui three statistics">
-      <div class="statistic">
-        <div class="value">
-          <%= @total_users %>
-        </div>
-        <div class="label">Сотрудников</div>
-      </div>
-      <div class="statistic">
-        <div class="value">
-          <%= @children.count %>
-        </div>
-        <div class="label">Подразделений</div>
-      </div>
-      <div class="statistic">
-        <div class="value">
-          <%= @total_events %>
-        </div>
-        <div class="label">Мероприятий</div>
-      </div>
+      <% end %>
     </div>
   </div>
-  
-  <!-- Иерархия подразделений -->
-  <div class="ui grid">
-    <div class="eight wide column">
-      <div class="ui segment">
-        <h3 class="ui header">
-          <i class="sitemap icon"></i>
-          Структура подразделения
-        </h3>
-        
-        <% if @parent %>
-          <div class="ui vertical segment">
-            <h4 class="ui header">
-              <i class="level up icon"></i>
-              Вышестоящее подразделение
-            </h4>
-            <div class="ui relaxed list">
-              <div class="item">
-                <i class="folder icon"></i>
-                <div class="content">
-                  <%= link_to @parent.name, department_path(@parent), class: 'header' %>
-                  <% if @parent.description.present? %>
-                    <div class="description"><%= @parent.description %></div>
-                  <% end %>
+
+  <!-- Основной контент -->
+  <div class="ui bottom attached segment" style="padding: 1.5em;">
+    <!-- Основная информация в двух колонках -->
+    <div class="ui stackable grid">
+      <!-- Левая колонка - Информация и иерархия -->
+      <div class="eight wide column">
+        <div class="ui segment">
+          <h4 class="ui header">
+            <i class="info circle icon"></i>
+            Информация о подразделении
+          </h4>
+          
+          <table class="ui very basic compact celled table">
+            <tbody>
+              <tr>
+                <td class="five wide"><strong>Полное название:</strong></td>
+                <td><%= @department.name %></td>
+              </tr>
+              <% if @department.description.present? %>
+                <tr>
+                  <td><strong>Описание:</strong></td>
+                  <td><%= @department.description %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Иерархия подразделений -->
+        <div class="ui segment" style="margin-top: 1em;">
+          <h4 class="ui header">
+            <i class="sitemap icon"></i>
+            Иерархия подразделения
+          </h4>
+          
+          <% if @parent %>
+            <div class="ui vertical segment" style="padding-top: 0;">
+              <h5 class="ui header">
+                <i class="level up icon"></i>
+                Вышестоящее подразделение
+              </h5>
+              <div class="ui relaxed list">
+                <div class="item">
+                  <div class="ui <%= 'amgu-green' %> ribbon label" style="left: -1.2em;">
+                    <i class="folder icon"></i>
+                  </div>
+                  <div class="content" style="padding-left: 3em;">
+                    <%= link_to @parent.name, department_path(@parent), class: 'header title-text' %>
+                    <% if @parent.description.present? %>
+                      <div class="description"><%= truncate(@parent.description, length: 50) %></div>
+                    <% end %>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        <% end %>
-        
-        <% if @children.any? %>
-          <div class="ui vertical segment">
-            <h4 class="ui header">
-              <i class="level down icon"></i>
-              Дочерние подразделения
-            </h4>
+          <% end %>
+          
+          <% if @children.any? %>
+            <div class="ui vertical segment">
+              <h5 class="ui header">
+                <i class="level down icon"></i>
+                Дочерние подразделения
+                <span class="ui teal circular mini label"><%= @children.count %></span>
+              </h5>
+              <div class="ui relaxed divided list">
+                <% @children.each do |child| %>
+                  <div class="item">
+                    <i class="folder outline icon" style="color: #016559;"></i>
+                    <div class="content">
+                      <%= link_to child.name, department_path(child), class: 'header title-text' %>
+                      <% if child.description.present? %>
+                        <div class="description"><%= truncate(child.description, length: 40) %></div>
+                      <% end %>
+                      <div class="extra">
+                        <div class="ui tiny horizontal list">
+                          <div class="item">
+                            <i class="users icon"></i>
+                            <%= child.users.count %>
+                          </div>
+                          <div class="item">
+                            <i class="sitemap icon"></i>
+                            <%= child.children.count %>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          <% else %>
+            <div class="ui placeholder segment" style="background: #f9f9f9; border: 2px dashed #ccc;">
+              <div class="ui icon header" style="color: #666;">
+                <i class="sitemap icon" style="color: #016559;"></i>
+                Нет дочерних подразделений
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+      
+      <!-- Правая колонка - Роли и сотрудники -->
+      <div class="eight wide column">
+        <!-- Роли в подразделении -->
+        <div class="ui segment">
+          <h4 class="ui header">
+            <i class="user secret icon"></i>
+            <%= link_to "Роли в подразделении", department_roles_path(@department) %> 
+            <span class="ui teal circular mini label"><%= @roles.count %></span>
+          </h4>
+          
+          <% if @roles.any? %>
             <div class="ui relaxed divided list">
-              <% @children.each do |child| %>
+              <% @roles.each do |role| %>
                 <div class="item">
-                  <i class="folder outline icon"></i>
+                  <i class="user circle icon" style="color: #016559;"></i>
                   <div class="content">
-                    <%= link_to child.name, department_path(child), class: 'header' %>
-                    <% if child.description.present? %>
-                      <div class="description"><%= child.description %></div>
-                    <% end %>
-                    <div class="extra">
-                      <small>
-                        <%= child.users.count %> сотрудников,
-                        <%= child.children.count %> подразделений
-                      </small>
+                    <div class="header">
+                      <span class="title-text"> <%= role.name %> </span>
+                      <% if role.description.present? %>
+                        <div class="sub header"><%= truncate(role.description, length: 30) %></div>
+                      <% end %>
+                    </div>
+                    <div class="description">
+                      <div class="ui mini images">
+                        <% role.users.limit(5).each do |user| %>
+                          <div class="ui tiny basic label" data-tooltip="<%= user.full_name %>" data-position="top center">
+                            <i class="user icon"></i>
+                            <%= user.surname %>
+                          </div>
+                        <% end %>
+                        <% if role.users.count > 5 %>
+                          <span class="ui tiny label">+<%= role.users.count - 5 %></span>
+                        <% end %>
+                      </div>
                     </div>
                   </div>
                 </div>
               <% end %>
             </div>
-          </div>
-        <% else %>
-          <div class="ui message">
-            <i class="info circle icon"></i>
-            Нет дочерних подразделений
-          </div>
-        <% end %>
-        
-        <%= link_to 'Показать всю иерархию', '#', 
-              class: 'ui basic button', 
-              id: 'showFullHierarchy' %>
-      </div>
-    </div>
-    
-    <!-- Роли в подразделении -->
-    <div class="eight wide column">
-      <div class="ui segment">
-        <h3 class="ui header">
-          <i class="user secret icon"></i>
-          Роли в подразделении
-        </h3>
-        
-        <% if @roles.any? %>
-          <div class="ui relaxed divided list">
-            <% @roles.each do |role| %>
-              <div class="item">
-                <i class="user circle icon"></i>
-                <div class="content">
-                  <div class="header">
-                    <%= role.name %>
-                    <% if role.description.present? %>
-                      <div class="sub header"><%= role.description %></div>
-                    <% end %>
-                  </div>
-                  <div class="description">
-                    <div class="ui tiny horizontal list">
-                      <% role.users.each do |user| %>
-                        <div class="item" title="<%= user.full_name %>">
-                          <%= user.surname %> <%= user.name.first %>.
-                        </div>
+          <% else %>
+            <div class="ui placeholder segment" style="background: #f9f9f9; border: 2px dashed #ccc;">
+              <div class="ui icon header" style="color: #666;">
+                <i class="user secret icon" style="color: #016559;"></i>
+                В этом подразделении еще нет ролей
+              </div>
+            </div>
+          <% end %>
+          
+          <% if can?(:create, Role.new(department: @department)) %>
+            <div style="margin-top: 1em; text-align: center;">
+              <%= link_to new_role_path(department_id: @department.id), 
+                    class: 'ui button' do %>
+                <i class="plus icon"></i> Добавить роль
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Ключевые сотрудники -->
+        <div class="ui segment" style="margin-top: 1em;">
+          <h4 class="ui header">
+            <i class="users icon"></i>
+            Сотрудники
+          </h4>
+          
+          <% if @department.users.any? %>
+            <div class="ui three column stackable grid">
+              <% @department.users.limit(6).each do |user| %>
+                <div class="column">
+                  <div class="ui segment" style="padding: 1em; text-align: center;">
+                    <i class="user circle huge icon" style="color: #016559;"></i>
+                    <div class="header" style="margin-top: 0.5em;">
+                      <%= link_to user.full_name, user_path(user), class: 'title-text' %>
+                    </div>
+                    <div class="meta">
+                      <% if user.current_role %>
+                        <span class="ui tiny label"><%= user.current_role.name %></span>
                       <% end %>
                     </div>
                   </div>
                 </div>
+              <% end %>
+            </div>
+            
+            <% if @department.users.count > 6 %>
+              <div style="margin-top: 1em; text-align: center;">
+                <%= link_to department_users_path(@department), class: 'ui basic button' do %>
+                  Все сотрудники (<%= @department.users.count %>)
+                <% end %>
               </div>
             <% end %>
-          </div>
-        <% else %>
-          <div class="ui message">
-            <i class="info circle icon"></i>
-            В этом подразделении еще нет ролей
-          </div>
-        <% end %>
-        
-        <% if can?(:create, Role.new(department: @department)) %>
-          <div class="ui divider"></div>
-          <%= link_to new_role_path(department_id: @department.id), 
-                class: 'ui primary button' do %>
-            <i class="plus icon"></i> Добавить роль
-          <% end %>
-        <% end %>
-      </div>
-    </div>
-  </div>
-  
-  <!-- Мероприятия -->
-  <div class="ui segment">
-    <h3 class="ui header">
-      <i class="calendar check icon"></i>
-      Мероприятия подразделения
-      <div class="ui teal circular label"><%= @participating_events.count %></div>
-    </h3>
-    
-    <% if @participating_events.any? %>
-      <div class="ui relaxed divided list">
-        <% @participating_events.each do |event| %>
-          <div class="item">
-            <i class="calendar icon"></i>
-            <div class="content">
-              <div class="header">
-                <%= link_to event.title, event_path(event) %>
-                <div class="ui teal mini label">
-                  <%= event.people %> участников
-                </div>
-              </div>
-              <div class="description">
-                <%= truncate(event.description, length: 100) %>
-                <div class="ui mini horizontal list">
-                  <div class="item">
-                    <i class="user icon"></i>
-                    <%= event.creator.surname %> <%= event.creator.name.first %>.
-                  </div>
-                  <div class="item">
-                    <i class="calendar outline icon"></i>
-                    <%= event.created_at.strftime('%d.%m.%Y') %>
-                  </div>
-                  <div class="item">
-                    <i class="users icon"></i>
-                    <%= event.departments.count %> подразделений
-                  </div>
-                </div>
+          <% else %>
+            <div class="ui placeholder segment" style="background: #f9f9f9; border: 2px dashed #ccc;">
+              <div class="ui icon header" style="color: #666;">
+                <i class="users icon" style="color: #016559;"></i>
+                Нет сотрудников в подразделении
               </div>
             </div>
-          </div>
-        <% end %>
+          <% end %>
+        </div>
       </div>
+    </div>
+
+    <!-- Мероприятия подразделения -->
+    <div class="ui segment" style="margin-top: 1em;">
+      <h4 class="ui header">
+        <i class="calendar check icon"></i>
+        <%= link_to "Мероприятия подразделения", department_events_path(@department) %>
+        <span class="ui teal circular mini label"><%= @department.approved_event_departments.count %></span>
+      </h4>
       
-      <% if Event.participating_by(@department).count > 10 %>
-        <div class="ui divider"></div>
-        <%= link_to 'Все мероприятия подразделения', 
-              events_path(tab: 'approved', department_id: @department.id), 
-              class: 'ui basic button' %>
+      <% if @participating_events.any? %>
+        <div style="overflow-x: auto;">
+          <table class="ui small compact celled table">
+            <thead>
+              <tr>
+                <th>Мероприятие</th>
+                <th class="center aligned">Дата</th>
+                <th class="center aligned">Уровень</th>
+                <th class="center aligned">Участников</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @participating_events.limit(10).each do |event| %>
+                <tr>
+                  <td>
+                    <div class="ui small header" style="margin: 0;">
+                      <div class="content">
+                        <%= link_to event.title, event_path(event), class: 'title-text' %>
+                        <div class="sub header" style="font-size: 0.8em;">
+                          <i class="user icon"></i> <%= event.creator.surname %>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="center aligned">
+                    <%= event.start_date.strftime('%d.%m.%Y') %>
+                  </td>
+                  <td class="center aligned">
+                    <span class="ui tiny label level-<%= event.level.name.parameterize %>">
+                      <%= event.level.name %>
+                    </span>
+                  </td>
+                  <td class="center aligned">
+                    <span class="ui teal circular mini label">
+                      <%= event.people %>
+                    </span>
+                  </td>
+                  <td class="center aligned">
+                    <% participation = event.approved_event_departments.find_by(department: @department) %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="ui placeholder segment" style="background: #f9f9f9; border: 2px dashed #ccc;">
+          <div class="ui icon header" style="color: #666;">
+            <i class="calendar icon" style="color: #016559;"></i>
+            Подразделение не участвует в мероприятиях
+          </div>
+        </div>
       <% end %>
-    <% else %>
-      <div class="ui message">
-        <i class="info circle icon"></i>
-        Подразделение не участвует в мероприятиях
-      </div>
-    <% end %>
+    </div>
   </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Показать полную иерархию
-  document.getElementById('showFullHierarchy')?.addEventListener('click', function(e) {
-    e.preventDefault();
-    // Можно реализовать модальное окно с полной иерархией
-    alert('Полная иерархия будет реализована в следующем обновлении');
-  });
-});
-</script>

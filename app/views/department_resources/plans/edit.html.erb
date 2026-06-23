@@ -8,15 +8,6 @@
       </div>
     </h1>
     
-    <div class="ui info message">
-      <div class="header">Информация о плане</div>
-      <ul class="list">
-        <li>Подразделение: <strong><%= @plan.department.name %></strong></li>
-        <li>Создатель: <strong><%= @plan.creator.full_name %></strong></li>
-        <li>Создан: <strong><%= @plan.created_at.strftime('%d.%m.%Y %H:%M') %></strong></li>
-        <li>Мероприятий в плане: <strong><%= @plan.plan_events.count %></strong></li>
-      </ul>
-    </div>
     
     <%= render 'form', plan: @plan %>
     

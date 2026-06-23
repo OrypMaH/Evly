@@ -1,92 +1,178 @@
-<table class="ui celled table">
-  <thead>
-    <tr>
-      <th class="center aligned" style="padding: 5px 5px;">
-        <div class="ui checkbox">
-          <input type="checkbox" id="selectAllCheckbox">
-        </div>
-      </th>
-      <th class="center aligned">ID</th>
-      <th>Название</th>
-      <th>Наименование ООВО</th>
-      <th>Уровень</th>
-      <th>Формат</th>
-      <th>Направление</th>
-      <th class="center aligned">Период проведения</th>
-      <th>Описание</th>
-      <th class="center aligned">Наши участники</th>
-      <th class="center aligned">Всего участников</th>
-      <th class="center aligned">Утверждено</th>
-      <th class="center aligned">Ответственные</th>
-      <th class="center aligned">Действия</th>
-    </tr>
-  </thead>
-  
-  <tbody>
-    <% event_departments.each do |ed| %>
+
+<div class="ui segment" style="padding: 0; overflow-x: auto;">
+  <table class="ui small compact celled table">
+    <thead>
       <tr>
-        <td class="center aligned" style="padding: 5px 5px;">
-          <% if ed %>
-            <div class="ui checkbox">
-              <input type="checkbox" 
-                class="event-checkbox" 
-                value="<%= ed.id %>" 
-                data-event-title="<%= ed.event.title %>"
-                data-event-start-date="<%= ed.event.start_date.strftime('%Y-%m-%d') %>"
-                data-event-department-id="<%= ed.department.id %>">
-            </div>
-          <% end %>
-        </td>
-        <td class="center aligned"><%= ed.event.id %></td>
-        <td><strong><%= ed.event.title %></strong></td>
-        <td><strong><%= ed.event.educational_organization.name %></strong></td>
-        <td><strong><%= ed.event.level.name %></strong></td>
-        <td><strong><%= ed.event.format %></strong></td>
-        <td><%= format_direction(ed.event.direction) %></td>
-        <td class="center aligned">
-          <%= format_event_period(ed.event.start_date, ed.event.end_date) %>
-          <% if ed.event.ongoing? %>
-            <div class="ui green horizontal label">Сейчас</div>
-          <% elsif ed.event.upcoming? %>
-            <div class="ui blue horizontal label">Скоро</div>
-          <% else %>
-            <div class="ui grey horizontal label">Завершено</div>
-          <% end %>
-        </td>
-        <td><%= truncate(ed.event.description, length: 80) %></td>
-        <td class="center aligned">
-        <div class="ui teal circular label">
-          <%= ed.participants_count %>
-        </div>
-        </td>
-        <td class="center aligned">
-          <div class="ui blue circular label">
-            <%= ed.event.people %>
+        <th class="center aligned" style="padding: 5px 5px;">
+          <div class="ui checkbox">
+            <input type="checkbox" id="selectAllCheckbox">
           </div>
-        </td>
-        <td class="center aligned">
-          <%= ed.created_at.strftime('%d.%m.%Y') %>
-          <%= ed.approved_by.full_name %> 
-        </td>
-        <td class="center aligned">
-          <% ed.event.responsible_people&.each_with_index do |person, index| %>
-            <%= person.description %><% if index < ed.event.responsible_people.size - 1 %><br><% end %>
-          <% end %>
-        </td>
-        <td class="center aligned">
-          <%= render_event_buttons(ed) %>
-        </td>
+        </th>
+        <th class="center aligned" style="width: 3%;">ID</th>
+        <th style="width: 8%;" class="table-header">Название</th>
+        <th style="width: 10%;" class="table-header">ООВО</th>
+        <th style="width: 5%;" class="table-header">Уровень</th>
+        <th style="width: 5%;" class="table-header">Формат</th>
+        <th style="width: 8%;" class="table-header">Направление</th>
+        <th class="center aligned" style="width: 5%;" class="table-header">Период проведения</th>
+        <th style="width: 10%;" class="table-header">Статусы подразделений</th>
+        <th class="center aligned">Наши участники</th>
+        <th class="center aligned" style="width: 5%;" class="table-header">Участники</th>
+        <th class="center aligned">Утверждено</th>
+        <th class="center aligned" style="width: 7%;" class="table-header">Ответственные</th>
+        <th class="center aligned" style="width: 5%;" class="table-header">Действия</th>
       </tr>
-    <% end %>
-  </tbody>
-</table>
+    </thead>
+    
+    
+    <tbody>
+      <% event_departments.each do |ed| %>
+        <% event = ed.event %>
+        <tr>
+        
+          <!-- Checkbox -->
+          <td class="center aligned" style="padding: 5px 5px;">
+            <% if ed %>
+              <div class="ui checkbox">
+                <input type="checkbox" 
+                  class="event-checkbox" 
+                  value="<%= ed.id %>" 
+                  data-event-title="<%= ed.event.title %>"
+                  data-event-start-date="<%= ed.event.start_date.strftime('%Y-%m-%d') %>"
+                  data-event-department-id="<%= ed.department.id %>">
+              </div>
+            <% end %>
+          </td>
+          <!-- ID -->
+          <td class="center aligned"><%= event.id %></td>
+          
+          <!-- Название -->
+          <td class="title-column">
+            <div class="ui small header" style="margin: 0;">
+              <div class="content">
+                <div class="title-text line-clamp-3" 
+                     data-tooltip="<%= event.title %>" data-position="top left">
+                  <%= event.title %>
+                </div>
+              </div>
+            </div>
+          </td>
+          
+          <!-- ООВО -->
+          <td>
+            <div class="line-clamp-2" style="max-width: 150px;"
+                 data-tooltip="<%= event.educational_organization.name %>" data-position="top left">
+              <%= event.educational_organization.name %>
+            </div>
+          </td>
+          
+          <!-- Уровень -->
+          <td>
+            <span class="ui tiny label level-<%= event.level.name.parameterize %>">
+              <%= event.level.name %>
+            </span>
+          </td>
+          
+          <!-- Формат -->
+          <td>
+              <%= event.format %>
+          </td>
+          
+          <!-- Направление -->
+          <td>
+            <div style="max-width: 120px;">
+              <%= format_direction(event.direction) %>
+            </div>
+          </td>
+          
+          <!-- Период проведения -->
+          <td class="center aligned">
+            <div style="font-size: 0.9em;" class="ui 
+              <% if event.ongoing? %>
+                green horizontal label">
+              <% elsif event.upcoming? %>
+                blue horizontal label">
+              <% else %>
+                grey horizontal label">
+              <% end %>
+              <%= format_event_period(event.start_date, event.end_date) %>
+            </div>
+          </td>
+
+          <!-- Статусы подразделений -->
+          <td>
+            <div class="ui mini labels">
+              <% event.event_departments.each do |eded| %>
+                <div class="ui <%= eded.status %> label" 
+                     data-position="top center">
+                  <%= link_to_department(eded.department) %>
+                  <% if eded.status == 'approved' && eded.participants_count > 0 %>
+                    <div class="detail"><%= eded.participants_count %></div>
+                  <% end %>
+                </div>
+              <% end %>
+              <% if event.event_departments.empty? %>
+                <span class="ui grey mini label">Нет</span>
+              <% end %>
+            </div>
+          </td>
+          
+          <!-- Наши участники -->
+          <td class="center aligned">
+            <div class="ui teal circular mini label">
+              <%= ed.participants_count %>
+            </div>
+          </td>
+          
+          <!-- Участники -->
+          <td class="center aligned">
+            <div class="ui teal circular mini label">
+              <%= event.people %>
+            </div>
+          </td>
+
+          <!-- Утверждено -->
+          <td class="center aligned">
+            <%= ed.created_at.strftime('%d.%m.%Y') %>
+            <%= link_to_short_user(ed.approved_by) %> 
+          </td>
+          
+          <!-- Ответственные -->
+          <td class="center aligned">
+            <div class="ui mini labels">
+              <% if event.responsible_people.present? %>
+                <% event.responsible_people.each do |person| %>
+                  <div class="ui basic mini label" 
+                       data-tooltip="<%= person.user.full_name %> - <%= person.role.name %>" 
+                       data-position="top center">
+                    <i class="user icon"></i>
+                    <%= link_to_short_user(person.user) %>
+                  </div>
+                <% end %>
+              <% else %>
+                <span class="ui grey mini label">—</span>
+              <% end %>
+            </div>
+          </td>
+          
+          <!-- Действия -->
+          <td class="center aligned">
+            <%= render_event_buttons(ed) %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+
+
 <% if event_departments.any? && can?(:add_event, Department.find(params[:department_id])) %>
   <div class="ui segment">
     <div class="ui buttons">
-      <button id="bulkAddButton" class="ui primary button" disabled>
+      <button id="bulkAddButton" class="ui primary button amgu-light-green" disabled>
         <i class="plus icon"></i> Добавить выбранные в план
       </button>
-      <div class="or"></div>
       <button id="clearSelectionButton" class="ui button">
         <i class="times icon"></i> Снять выделение
       </button>
