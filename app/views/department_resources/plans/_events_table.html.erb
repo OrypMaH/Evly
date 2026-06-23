@@ -1,0 +1,48 @@
+<%# app/views/plans/_events_table.html.erb %>
+<table class="ui celled striped table">
+  <thead>
+    <tr>
+      <th class="center aligned" style="width: 50px;">#</th>
+      <th>Название мероприятия</th>
+      <th>Статус</th>
+      <th class="center aligned">Информация</th>
+      <th class="center aligned">Создатель</th>
+      <th class="center aligned">Дата добавления</th>
+      <th class="center aligned">Действия</th>
+    </tr>
+  </thead>
+  
+  <tbody>
+    <% plan_events.each_with_index do |plan_event, index| %>
+      <tr>
+        <td class="center aligned">
+          <div class="ui small label"><%= index + 1 %></div>
+        </td>
+        <td>
+          <strong><%= link_to_event(plan_event.event_department.event)%></strong>
+          <% if plan_event.event_department.event.description.present? %>
+            <div class="ui small text" style="margin-top: 5px;">
+              <%= truncate(plan_event.event_department.event.description, length: 100) %>
+            </div>
+          <% end %>
+        </td>
+        <td>
+          <%= render_plan_event_status(plan_event) %>
+        </td>
+        <td class="center aligned">
+          <%= render_plan_event_info(plan_event) %>
+        </td>
+        <td class="center aligned">
+          <%= plan_event.event_department.event.creator.surname %>
+          <%= plan_event.event_department.event.creator.name.first %>.
+        </td>
+        <td class="center aligned">
+          <%= plan_event.created_at.strftime('%d.%m.%Y') %>
+        </td>
+        <td class="center aligned">
+          <%= render_plan_event_actions(plan_event) %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

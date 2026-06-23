@@ -1,0 +1,43 @@
+<%# app/views/layouts/_amgu_taken_user_panel_form.html.erb %>
+
+<%= render 'layouts/broken_left_panel_form' %>
+
+<div class="ui secondary fixed main menu" style="-webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); background: rgba(226, 226, 226, 0.71); z-index: 99;">
+  <a class="launch icon item" id="menu-launch-btn">
+    <i class="content icon large"></i>
+  </a>
+  
+  <div class="right menu">
+    <% if user_signed_in? %>
+      <a class="item" data-tooltip="Уведомление" data-position="bottom right" data-inverted="" href="/notifications/">
+        <i class="icon blue circular inverted inbox"></i>
+        <div class="ui top right attached red label circular mini">54</div>
+      </a>
+      
+      <div class="ui dropdown item" tabindex="0">
+        <img class="ui avatar image" src="/uploads/profile/avatar/13233/avatar13234.png">
+        <i class="dropdown icon"></i>
+        <div class="menu" tabindex="-1">
+          <%= link_to current_user, class: 'item' do %>
+            <i class="user icon"></i>
+            Профиль
+          <% end %>
+          
+          
+          <a class="item"><i class="cog large icon"></i>Настройки</a>
+          <div class="divider"></div>
+          
+          <%= link_to session_path, 
+                      data: { method: :delete }, 
+                      class: 'item' do %>
+            <i class="sign out large icon"></i>
+            Выход
+          <% end %>
+        </div>
+      </div>
+    <% else %>
+      <%= link_to 'Регистрация', new_user_path, class: 'ui item' %>
+      <%= link_to 'Вход', new_session_path, class: 'ui item' %>
+    <% end %>
+  </div>
+</div>

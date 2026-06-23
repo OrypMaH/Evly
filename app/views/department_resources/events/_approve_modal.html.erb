@@ -1,0 +1,25 @@
+<div class="ui modal" id="approveParticipationModal">
+  <i class="close icon"></i>
+  <div class="header" id="approveModalHeader">
+    Утверждение участия
+  </div>
+  <div class="content">
+    <%= form_tag '', method: :patch, class: "ui form", id: "approveParticipationForm" do %>
+      <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+      
+      <div class="field">
+        <label for="participants_count">Количество участников от подразделения</label>
+        <%= number_field_tag :participants_count, 1, 
+              min: 1, 
+              class: "ui input",
+              id: "modalParticipantsCount",
+              name: "participants_count" %>
+      </div>
+      
+      <div class="actions" style="text-align: right; margin-top: 20px;">
+        <div class="ui black deny button" type="button">Отмена</div>
+        <%= submit_tag "Утвердить участие", class: "ui positive right labeled icon button" %>
+      </div>
+    <% end %>
+  </div>
+</div>

@@ -1,0 +1,25 @@
+
+<div class="item" 
+  data-id="<%= rp.id %>" 
+  data-user-id="<%= rp.user_id %>" 
+  data-role-id="<%= rp.role_id %>">
+
+<div class="right floated content">
+  <%= form.hidden_field :_destroy, class: 'destroy-flag' %>
+  <button type="button" class="ui basic red icon button remove-responsible-btn">
+    <i class="trash icon"></i>
+  </button>
+</div>
+
+<i class="user circle large icon"></i>
+
+<div class="content">
+  <div class="header"><%= rp.user&.full_name %></div>
+  <div class="description">
+    <span class="ui tiny label">
+      <i class="suitcase icon"></i>
+      <%= rp.role&.name %>
+    </span>
+  </div>
+</div>
+</div>

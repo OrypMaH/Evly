@@ -1,0 +1,16 @@
+<div class="ui container">
+  <div class="ui segment">
+    <h1 class="ui header">
+      <i class="plus icon"></i>
+      Создание нового направления воспитательной работы
+      <div class="sub header">
+          <% if params[:department_id].present? && (dept = Department.find_by(id: params[:department_id])) %>
+              Для подразделения: <%= dept.name %>
+          <% else %>
+          <% end %>
+      </div>
+    </h1>
+    
+    <%= render 'form', direction: @direction %>
+  </div>
+</div>

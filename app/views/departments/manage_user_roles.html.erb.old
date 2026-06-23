@@ -23,17 +23,15 @@
               <strong><%= user.full_name %></strong>
             </td>
             <td>
-              <% if user.roles.any? %>
-                <div class="ui horizontal list">
-                  <% user.roles.each do |role| %>
-                    <div class="item">
-                      <div class="ui tiny label"><%= role.name %></div>
+              <div class="ui horizontal list">
+                <% @user_department_roles[user.id].each do |role| %>
+                  <div class="item">
+                    <div class="ui tiny basic label">
+                      <%= role.name %>
                     </div>
-                  <% end %>
-                </div>
-              <% else %>
-                <span class="ui tiny text muted">Нет ролей</span>
-              <% end %>
+                  </div>
+                <% end %>
+              </div>
             </td>
             <td>
               <% if user.current_role %>

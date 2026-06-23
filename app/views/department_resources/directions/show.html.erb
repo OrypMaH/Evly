@@ -1,0 +1,260 @@
+<%# app/views/directions/show.html.erb %>
+
+<div class="ui container">
+  <!-- Заголовок в стиле АмГУ -->
+  <h3 class="ui header orange" style="margin-top: 1em;">
+    <i class="bordered inverted orange icon compass"></i>
+    <div class="content">
+      <%= @direction.name %>
+      <div class="sub header">
+        Направление воспитательной работы
+      </div>
+    </div>
+  </h3>
+
+  <!-- Верхняя навигационная панель -->
+  <div class="ui grey inverted menu top attached amgu-green" style="border-radius: 8px 8px 0 0 !important;">
+    <%= link_to :back, class: 'item' do %>
+      <i class="arrow left icon"></i> Назад
+    <% end %>
+    
+    <%= link_to department_directions_path(@direction.department), class: 'item' do %>
+      <i class="list icon"></i> К списку направлений
+    <% end %>
+    
+    <div class="right menu">
+      <% if can?(:update, @direction) %>
+        <%= link_to edit_direction_path(@direction), class: 'item' do %>
+          <i class="edit icon"></i> Редактировать
+        <% end %>
+      <% end %>
+      
+      <% if can?(:destroy, @direction) %>
+        <%= link_to @direction, 
+                    method: :delete,
+                    class: 'item',
+                    data: { confirm: "Удалить направление '#{@direction.name}'?" } do %>
+          <i class="trash icon"></i> Удалить
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Основной контент -->
+  <div class="ui bottom attached segment" style="padding: 1.5em;">
+    
+    <!-- Статистика направления -->
+    <div class="ui three small statistics" style="margin-bottom: 2em;">
+      <div class="teal statistic">
+        <div class="value">
+          <i class="building icon"></i>
+          <%= @direction.department.name %>
+        </div>
+        <div class="label">Подразделение</div>
+      </div>
+      
+      <div class="olive statistic">
+        <div class="value">
+          <i class="calendar check icon"></i>
+          <%= @direction.events.count %>
+        </div>
+        <div class="label">Мероприятий</div>
+      </div>
+      
+      <div class="purple statistic">
+        <div class="value">
+          <i class="calendar icon"></i>
+          <%= @direction.events.upcoming.count %>
+        </div>
+        <div class="label">Предстоящих</div>
+      </div>
+    </div>
+
+    <!-- Описание направления -->
+    <div class="ui segment">
+      <h4 class="ui header" style="color: #016559;">
+        <i class="file alternate outline icon"></i>
+        Описание направления
+      </h4>
+      
+      <% if @direction.description.present? %>
+        <div class="ui message" style="background: #f9f9f9;">
+          <%= simple_format(@direction.description) %>
+        </div>
+      <% else %>
+        <div class="ui placeholder segment" style="background: #f9f9f9; border: 2px dashed #ccc;">
+          <div class="ui icon header" style="color: #666;">
+            <i class="file alternate outline icon" style="color: #016559;"></i>
+            Описание отсутствует
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Информация о подразделении -->
+    <div class="ui segment" style="margin-top: 1em;">
+      <h4 class="ui header" style="color: #016559;">
+        <i class="sitemap icon"></i>
+        Информация о подразделении
+      </h4>
+      
+      <div class="ui stackable two column grid">
+        <div class="column">
+          <div class="ui list">
+            <div class="item">
+              <div class="header">Подразделение</div>
+              <%= smart_link_to @direction.department, @direction.department.name %>
+            </div>
+            <% if @direction.department.parent %>
+              <div class="item">
+                <div class="header">Вышестоящее подразделение</div>
+                <%= smart_link_to @direction.department.parent, @direction.department.parent.name %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+        <div class="column">
+          <div class="ui list">
+            <div class="item">
+              <div class="header">Создано</div>
+              <i class="calendar icon"></i>
+              <%= @direction.created_at.strftime('%d.%m.%Y в %H:%M') %>
+            </div>
+            <div class="item">
+              <div class="header">Последнее обновление</div>
+              <i class="sync icon"></i>
+              <%= @direction.updated_at.strftime('%d.%m.%Y в %H:%M') %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Мероприятия направления -->
+    <div class="ui segment" style="margin-top: 1em;">
+      <div class="ui grid">
+        <div class="eight wide column">
+          <h4 class="ui header" style="color: #016559;">
+            <i class="calendar icon"></i>
+            Мероприятия направления
+            <span class="ui teal circular mini label"><%= @direction.events.count %></span>
+          </h4>
+        </div>
+        <div class="eight wide column right aligned">
+          <% if can?(:create, Event) %>
+            <%= link_to new_event_path(direction_id: @direction.id), class: 'ui primary button' do %>
+              <i class="plus icon"></i> Добавить мероприятие
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+      
+      <% if @direction.events.any? %>
+        <div style="overflow-x: auto;">
+          <table class="ui small compact celled table">
+            <thead>
+              <tr>
+                <th>Название</th>
+                <th class="center aligned">Дата проведения</th>
+                <th class="center aligned">Уровень</th>
+                <th class="center aligned">Участников</th>
+                <th class="center aligned">Действия</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @direction.events.order(start_date: :desc).limit(20).each do |event| %>
+                <tr>
+                  <td>
+                    <div class="ui small header" style="margin: 0;">
+                      <div class="content">
+                        <div class="title-text">
+                          <%= smart_link_to event, event.title %>
+                        </div>
+                        <div class="sub header" style="font-size: 0.8em; margin-top: 0.2em;">
+                          <%= truncate(event.description, length: 60) %>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="center aligned">
+                    <%= event.start_date.strftime('%d.%m.%Y') %>
+                    <% if event.end_date && event.end_date != event.start_date %>
+                      <div class="ui tiny grey text">- <%= event.end_date.strftime('%d.%m.%Y') %></div>
+                    <% end %>
+                  </td>
+                  <td class="center aligned">
+                    <span class="ui tiny label level-<%= event.level.name.parameterize %>">
+                      <%= event.level.name %>
+                    </span>
+                  </td>
+                  <td class="center aligned">
+                    <div class="ui teal circular mini label">
+                      <%= event.people %>
+                    </div>
+                  </td>
+                  <td class="center aligned">
+                    <div class="ui mini buttons action-group">
+                      <%= link_to event_path(event), class: 'ui icon button', data: { tooltip: 'Просмотр' } do %>
+                        <i class="eye icon"></i>
+                      <% end %>
+                      <% if can?(:update, event) %>
+                        <%= link_to edit_event_path(event), class: 'ui icon button', data: { tooltip: 'Редактировать' } do %>
+                          <i class="edit icon"></i>
+                        <% end %>
+                      <% end %>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+        
+        <% if @direction.events.count > 20 %>
+          <div style="margin-top: 1em; text-align: center;">
+            <%= link_to events_path(direction_id: @direction.id), class: 'ui basic button' do %>
+              Все мероприятия направления (<%= @direction.events.count %>)
+            <% end %>
+          </div>
+        <% end %>
+        
+      <% else %>
+        <div class="ui placeholder segment" style="background: #f9f9f9; border: 2px dashed #ccc;">
+          <div class="ui icon header" style="color: #666;">
+            <i class="calendar icon" style="color: #016559;"></i>
+            В этом направлении пока нет мероприятий
+          </div>
+          <% if can?(:create, Event) %>
+            <%= link_to new_event_path(direction_id: @direction.id), class: 'ui primary button' do %>
+              <i class="plus icon"></i> Добавить первое мероприятие
+            <% end %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+    
+    <!-- Наследуемые подразделения (если есть дочерние) -->
+    <% if @direction.department.children.any? %>
+      <div class="ui segment" style="margin-top: 1em;">
+        <h4 class="ui header" style="color: #016559;">
+          <i class="level down icon"></i>
+          Наследуется подразделениями
+        </h4>
+        
+        <div class="ui list">
+          <% @direction.department.children.each do |child| %>
+            <div class="item">
+              <i class="building icon"></i>
+              <div class="content">
+                <%= smart_link_to child, child.name %>
+                <div class="description">
+                  <small>Это направление доступно для планирования в подразделении</small>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

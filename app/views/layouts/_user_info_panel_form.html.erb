@@ -1,0 +1,50 @@
+<!-- Компактная версия информационной панели -->
+<div class="ui main container" style="margin-top: 1em; margin-bottom: 2em;">
+  <div class="ui container">
+    <div class="ui segment" style="border-radius: 8px; padding: 1em;">
+      <div class="ui stackable grid">
+        <div class="two wide column middle aligned">
+            <i class="user circle massive icon" ></i>
+        </div>
+        
+        <div class="ten wide column middle aligned">
+          <h3 style="margin-bottom: 0.2em;"><%= link_to_user current_user%></h3>
+          <% if current_department && current_user.current_role %>
+            <div>
+              <i class="user secret icon"></i> <%= current_user.current_role.name %>
+              <i class="building icon" style="margin-left: 1em;"></i> <%= link_to_department current_department %>
+            </div>
+          <% else %>
+            <div>
+              Нет должностей
+            </div>
+          <% end %>
+          <div style="margin-top: 0.5em;">
+            <% current_user.roles.each do |role| %>
+              <%= link_to select_current_role_user_path(current_user, role_id: role.id), 
+                          method: :post, 
+                          class: "ui tiny label #{'green' if role == current_user.current_role}",
+                          style: "margin-right: 0.3em;",
+                          data: { turbo: false } do %>
+                <%= role.name.truncate(15) %>
+              <% end %>
+            <% end %>
+          </div>
+        </div>
+        
+        <div class="four wide column middle aligned right aligned">
+          <% if false %>
+           <%= link_to department_user_edit_roles_path(current_department, current_user), class: 'ui small basic  button' do %>
+             <i class="edit icon"></i> Роли
+           <% end %>
+          <% end %>
+          <%= link_to session_path, 
+                      data: { method: :delete }, 
+                      class: 'ui small inverted red button' do %>
+            <i class="sign out icon"></i>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

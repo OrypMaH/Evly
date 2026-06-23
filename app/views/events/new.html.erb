@@ -1,3 +1,27 @@
-<h1>Создать мероприятие</h1>
+<%# app/views/events/new.html.erb %>
+<div class="ui container">
+  <div class="ui segment">
+    <h1 class="ui header">
+      <i class="plus icon"></i>
+      Создание нового мероприятия
+      <div class="sub header">
+        Заполните информацию о мероприятии
+      </div>
+    </h1>
+    
+    <div class="ui info message">
+      <div class="header">Подсказки:</div>
+      <ul class="list">
+        <li>Поля помеченные * обязательны для заполнения</li>
+        <li>Даты будут автоматически скорректированы если вы перепутаете начало и конец</li>
+        <li>Уровень мероприятия помогает в классификации и отчетности</li>
+      </ul>
+    </div>
+    
+    <%= render 'form', event: @event %>
+  </div>
+</div>
 
-<%= render'form'%>
+<% content_for :javascript_pack do %>
+  <%= javascript_pack_tag 'events_form' %>
+<% end %>

@@ -1,16 +1,278 @@
-<%= form_with model: @event do |f| %>
-    <div>
-        <%= f.label :Название%>
-        <%= f.text_field :title, required: true, minlenght: 2, placeholder: "Название" %>
+<%= form_with model: event, local: true, class: "ui form event-form", id: "eventForm" do |form| %>
+    <%= form.hidden_field :id, id: 'event_id', value: event.id || 'new' %>
+  <% if event.errors.any? %>
+    <div class="ui error message">
+      <div class="header">Ошибки при сохранении:</div>
+      <ul class="list">
+        <% event.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
     </div>
-    <div>
-        <%= f.label :Описание%>
-        <%= f.text_field :description, placeholder: "Описание" %>
+  <% end %>
+          
+  <div class="field <%= 'error' if event.errors[:title].any? %>">
+    <%= form.label :title, "Название мероприятия" %>
+    <%= form.text_field :title, 
+          placeholder: "Введите название мероприятия",
+          class: 'ui input' %>
+    <% if event.errors[:title].any? %>
+      <div class="ui pointing red basic label">
+        <%= event.errors[:title].join(', ') %>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="field <%= 'error' if event.errors[:educational_organization].any? %>">
+    <%= form.label :educational_organization_id, "Образовательная организация" %>
+    
+    <div class="ui action input">
+      <%= form.collection_select :educational_organization_id, 
+            EducationalOrganization.all, 
+            :id, :name, 
+            { include_blank: "Выберете образовательную организацию" },
+            { class: "ui dropdown", id: "educational_organization_select" } %>
+      
+      <button type="button" 
+              class="ui primary icon button" 
+              id="new_educational_organization_btn"
+              data-tooltip="Добавить новую организацию"
+              data-position="top center">
+        <i class="plus icon"></i>
+      </button>
     </div>
     
-    <div>
-        <%= f.label :"Количество участников"%>
-        <%= f.text_field :people, placeholder: "Количество участников" %>
+  </div>
+  
+  <div class="field <%= 'error' if event.errors[:description].any? %>">
+    <%= form.label :description, "Описание" %>
+    <%= form.text_area :description, 
+          rows: 4, 
+          placeholder: "Подробное описание мероприятия, цели, задачи...",
+          class: 'ui textarea' %>
+  </div>
+  
+  <div class="two fields">
+    <div class="field <%= 'error' if event.errors[:event_level_id].any? %>">
+      <%= form.label :event_level_id, "Уровень мероприятия" %>
+      <%= form.collection_select :event_level_id, 
+            EventLevel.ordered, 
+            :id, :name, 
+            { include_blank: "Выберите уровень..." },
+            { class: "ui dropdown" } %>
+      <% if event.errors[:event_level_id].any? %>
+        <div class="ui pointing red basic label">
+          <%= event.errors[:event_level_id].join(', ') %>
+        </div>
+      <% end %>
     </div>
-    <%= f.submit "Создать" %>
+    
+    <div class="field <%= 'error' if event.errors[:format].any? %>">
+      <%= form.label :format, "Формат проведения" %>
+      <%= form.text_field :format, 
+            placeholder: "Например: очный, онлайн, гибридный",
+            class: 'ui input',
+            maxlength: 100 %>
+      <% if event.errors[:format].any? %>
+        <div class="ui pointing red basic label">
+          <%= event.errors[:format].join(', ') %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+   <%= render 'direction_field', form: form, event: event%>
+  
+  <div class="field <%= 'error' if event.errors[:location].any? %>">
+    <%= form.label :location, "Место проведения" %>
+    <%= form.text_field :location, 
+          placeholder: "Например: актовый зал, онлайн-платформа, аудитория 301",
+          class: 'ui input',
+          maxlength: 200 %>
+    <% if event.errors[:location].any? %>
+      <div class="ui pointing red basic label">
+        <%= event.errors[:location].join(', ') %>
+      </div>
+    <% end %>
+  </div>
+  
+  <div class="field">
+    <label>Ответственные лица</label>
+    
+    <!-- Контейнер для существующих и новых ответственных лиц -->
+    <div id="responsible-people-list" class="ui segment">
+      <div class="ui grid">
+        <div class="ten wide column">
+          <h4 class="ui header">Назначенные ответственные лица</h4>
+        </div>
+        <div class="six wide column right aligned">
+          <button type="button" 
+                  id="show-add-form-btn" 
+                  class="ui primary button">
+            <i class="plus icon"></i> Добавить ответственное лицо
+          </button>
+        </div>
+      </div>
+      
+      <!-- Список уже добавленных -->
+      <div id="responsible-people-items" class="ui relaxed divided list">
+        <%= form.fields_for :responsible_people do |rp_form| %>
+          <%= render 'responsible_person_fields', f: rp_form %>
+        <% end %>
+      </div>
+      
+      <!-- Сообщение, если нет ответственных лиц -->
+      <% if event.responsible_people.empty? %>
+        <div id="no-responsible-message" class="ui placeholder segment">
+          <div class="ui icon header">
+            <i class="user circle icon"></i>
+            Нет назначенных ответственных лиц
+          </div>
+        </div>
+      <% end %>
+      
+      <!-- Форма для быстрого добавления (изначально скрыта) -->
+      <div id="quick-add-form" class="ui segment" style="display: none; margin-top: 20px;">
+        <h5 class="ui header">Быстрое добавление ответственного лица</h5>
+        
+        <div class="ui form">
+          <div class="two fields">
+            <!-- Поиск пользователя -->
+            <div class="field">
+              <label>Пользователь</label>
+              <div class="ui search" id="inline-user-search">
+                <div class="ui icon input" style="width: 100%;">
+                  <input type="text" 
+                         id="inline-user-search-input" 
+                         class="prompt" 
+                         placeholder="Введите имя...">
+                  <i class="search icon"></i>
+                </div>
+                <div class="results"></div>
+              </div>
+            </div>
+            
+            <!-- Выбор должности -->
+            <div class="field">
+              <label>Должность</label>
+              <select id="inline-role-select" class="ui dropdown" disabled>
+                <option value="">Сначала выберите пользователя</option>
+              </select>
+            </div>
+          </div>
+          
+          <!-- Кнопки действий -->
+          <div class="ui buttons">
+            <button type="button" 
+                    id="confirm-inline-add" 
+                    class="ui primary button" 
+                    disabled>
+              <i class="check icon"></i> Добавить
+            </button>
+            <button type="button" 
+                    id="cancel-inline-add" 
+                    class="ui button">
+              Отмена
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Шаблон для нового ответственного лица (скрыт) -->
+    <template id="new-responsible-person-template">
+      <%= form.fields_for :responsible_people, ResponsiblePerson.new, child_index: 'NEW_RECORD' do |rp_form| %>
+        <%= render 'responsible_person_fields', f: rp_form %>
+      <% end %>
+    </template>
+  </div>
+
+  <div class="two fields">
+    <div class="field <%= 'error' if event.errors[:start_date].any? %>">
+      <%= form.label :start_date, "Дата и время начала" %>
+      <div class="ui calendar" id="startDatePicker">
+        <div class="ui input left icon">
+          <i class="calendar icon"></i>
+          <%= form.datetime_field :start_date, 
+                value: event.start_date&.strftime('%Y-%m-%dT%H:%M'),
+                class: 'ui input',
+                placeholder: "Выберите дату и время" %>
+        </div>
+      </div>
+      <% if event.errors[:start_date].any? %>
+        <div class="ui pointing red basic label">
+          <%= event.errors[:start_date].join(', ') %>
+        </div>
+      <% end %>
+    </div>
+    
+    <div class="field <%= 'error' if event.errors[:end_date].any? %>">
+      <%= form.label :end_date, "Дата и время окончания " %>
+      <div class="ui calendar" id="endDatePicker">
+        <div class="ui input left icon">
+          <i class="calendar icon"></i>
+          <%= form.datetime_field :end_date, 
+                value: event.end_date&.strftime('%Y-%m-%dT%H:%M'),
+                class: 'ui input',
+                placeholder: "Выберите дату и время" %>
+        </div>
+      </div>
+      <% if event.errors[:end_date].any? %>
+        <div class="ui pointing red basic label">
+          <%= event.errors[:end_date].join(', ') %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+  
+  <% if event.errors[:end_date].any? && event.errors[:end_date].include?("должна быть после даты начала") %>
+    <div class="ui warning message">
+      <i class="info circle icon"></i>
+      <div class="content">
+        <div class="header">Внимание!</div>
+        <p>Если дата окончания будет раньше даты начала, система автоматически поменяет их местами.</p>
+      </div>
+    </div>
+  <% end %>
+  
+  <div class="ui segment">
+    <div class="ui buttons">
+      <% if event.persisted? %>
+        <%= form.submit "Обновить мероприятие", class: "ui primary button" %>
+        <%= link_to "Отмена", event_path(event), class: "ui button" %>
+      <% else %>
+        <%= form.submit "Создать мероприятие", class: "ui primary button" %>
+        <%= link_to "Отмена", events_path, class: "ui button" %>
+      <% end %>
+    </div>
+  </div>
 <% end %>
+
+<% content_for :javascript_packs do %>
+  <%= javascript_pack_tag 'responsible_persons' %>
+  <%= javascript_pack_tag 'events_form' %>
+<% end %>
+<%= render 'new_educational_organization_modal' %>
+
+<template id="responsible-person-template">
+  <div class="item" data-user-id="" data-role-id="">
+    <div class="right floated content">
+      <input type="hidden" name="event[responsible_people_attributes][__INDEX__][user_id]" class="user-id-field">
+      <input type="hidden" name="event[responsible_people_attributes][__INDEX__][role_id]" class="role-id-field">
+      <input type="hidden" name="event[responsible_people_attributes][__INDEX__][_destroy]" class="destroy-flag" value="">
+      <button type="button" class="ui basic red icon button remove-responsible-btn">
+        <i class="trash icon"></i>
+      </button>
+    </div>
+    <i class="user circle large icon"></i>
+    <div class="content">
+      <div class="header"></div>
+      <div class="description">
+        <span class="ui tiny label">
+          <i class="suitcase icon"></i>
+          <span class="role-name"></span>
+        </span>
+      </div>
+    </div>
+  </div>
+</template>

@@ -4,7 +4,6 @@
       <i class="sitemap icon"></i>
       Подразделения
     </h1>
-    <%= link_to 'Новое подразделение', new_department_path, class: 'ui primary button' %>
   </div>
 
   <div class="ui segment">
@@ -18,10 +17,16 @@
               <small class="ui text muted"><%= department.description %></small>
             </div>
             <div class="description">
-              <%= link_to 'Добавить подразделение', new_department_path(parent_id: department.id), class: 'ui mini button' %>
-              <%= link_to 'Редактировать', edit_department_path(department), class: 'ui mini button' %>
-              <%= link_to 'Удалить', department, method: :delete, class: 'ui mini red button', 
+              <%if can?(:create, Department.new(parent_id: department.id))%>
+                <%= link_to 'Добавить подразделение', new_department_path(parent_id: department.id), class: 'ui mini button' %>
+              <%end%>
+              <%if can?(:edit, department)%>
+                <%= link_to 'Редактировать', edit_department_path(department), class: 'ui mini button' %>
+              <%end%>
+              <%if can?(:delete, department)%>
+                <%= link_to 'Удалить', department, method: :delete, class: 'ui mini red button', 
                     data: { confirm: "Удалить подразделение #{department.name}?" } %>
+              <%end%>
             </div>
           </div>
         </div>

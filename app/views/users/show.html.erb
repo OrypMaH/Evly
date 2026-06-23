@@ -1,0 +1,296 @@
+<%# app/views/users/show.html.erb %>
+
+<div class="ui container">
+  <!-- Заголовок в стиле АмГУ -->
+  <h3 class="ui header orange" style="margin-top: 1em;">
+    <i class="bordered inverted orange icon user circle"></i>
+    <div class="content">
+      Профиль пользователя
+      <div class="sub header"><%= @user.full_name %></div>
+    </div>
+  </h3>
+
+  <!-- Верхняя навигационная панель -->
+  <div class="ui grey inverted menu top attached amgu-green" style="border-radius: 8px 8px 0 0 !important;">
+    <%= link_to :back, class: 'item' do %>
+      <i class="arrow left icon"></i> Назад
+    <% end %>
+    
+    <% if can?(:edit, @user) %>
+      <div class="right menu">
+        <%= link_to edit_user_path(@user), class: 'item' do %>
+          <i class="edit icon"></i> Редактировать
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Основной контент -->
+  <div class="ui bottom attached segment" style="padding: 1.5em;">
+    
+    
+
+    <!-- Основная информация в двух колонках -->
+    <div class="ui stackable grid">
+
+      <!-- Правая колонка - Детальная информация -->
+      <div class=" column">
+        <!-- Личные данные -->
+        <div class="ui segment">
+          <h4 class="ui header" style="color: #016559;">
+            <i class="info circle icon"></i>
+            Личная информация
+          </h4>
+          
+          <div class="ui stackable two column grid">
+            <div class="column">
+              <div class="ui list">
+                <div class="item">
+                  <div class="header">Фамилия</div>
+                  <%= @user.surname %>
+                </div>
+                <div class="item">
+                  <div class="header">Имя</div>
+                  <%= @user.name %>
+                </div>
+                <div class="item">
+                  <div class="header">Отчество</div>
+                  <%= @user.patronymic %>
+                </div>
+                <div class="item">
+                  <div class="header">Контактные данные</div>
+                  <%= @user.contact.presence || '—' %>
+                </div>
+              </div>
+            </div>
+            <div class="column">
+              <div class="ui list">
+                <div class="item">
+                  <i class="calendar icon"></i>
+                  <div class="content">
+                    <div class="header">Дата регистрации</div>
+                    <div class="description"><%= @user.created_at.strftime('%d.%m.%Y') %></div>
+                  </div>
+                </div>
+                <div class="item">
+                  <i class="sync icon"></i>
+                  <div class="content">
+                    <div class="header">Последнее обновление</div>
+                    <div class="description"><%= @user.updated_at.strftime('%d.%m.%Y') %></div>
+                  </div>
+                </div>
+                <% if @user==current_user %>
+                  <div class="item">
+                    <i class="user icon"></i>
+                    <div class="content">
+                      <div class="header">Ваш айди</div>
+                      <div class="description"><%= @user.id %></div>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+        
+        
+        
+        <!-- Все роли пользователя -->
+        <div class="ui segment" style="margin-top: 1em;">
+          <h4 class="ui header" style="color: #016559;">
+            <i class="id card icon"></i>
+            Все роли
+            <span class="ui teal circular mini label"><%= @user.roles.count %></span>
+          </h4>
+          
+          <% if @user.roles.any? %>
+            <div class="ui three column stackable grid">
+              <% @user.roles.each do |role| %>
+                <div class="column">
+                  <div class="ui card" style="width: 100%;">
+                    <div class="content">
+                      <div class="header" style="color: #016559;">
+                        <i class="user circle icon"></i>
+                        <%= role.name %>
+                      </div>
+                      <div class="meta">
+                        <i class="building icon"></i>
+                        <%= role.department.name %>
+                      </div>
+                      <% if role.description.present? %>
+                        <div class="description">
+                          <%= truncate(role.description, length: 60) %>
+                        </div>
+                      <% end %>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="ui placeholder segment" style="background: #f9f9f9; border: 2px dashed #ccc;">
+              <div class="ui icon header" style="color: #666;">
+                <i class="id card icon" style="color: #016559;"></i>
+                У пользователя нет ролей
+              </div>
+            </div>
+          <% end %>
+        </div>
+        
+        <!-- Подразделения пользователя -->
+        <div class="ui segment" style="margin-top: 1em;">
+          <h4 class="ui header" style="color: #016559;">
+            <i class="building icon"></i>
+            Подразделения
+            <span class="ui teal circular mini label"><%= @user.departments.count %></span>
+          </h4>
+          
+          <% if @user.departments.any? %>
+            <div class="ui two column stackable grid">
+              <% @user.departments.each do |dept| %>
+                <div class="column">
+                  <div class="ui segments">
+                    <div class="ui segment" style="padding: 0.8em;">
+                      <i class="sitemap icon" style="color: #016559;"></i>
+                      <strong><%= dept.name %></strong>
+                      <div class="ui tiny grey text" style="margin-top: 0.3em;">
+                        <i class="users icon"></i> Сотрудников: <%= dept.users.count %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="ui placeholder segment" style="background: #f9f9f9; border: 2px dashed #ccc;">
+              <div class="ui icon header" style="color: #666;">
+                <i class="building icon" style="color: #016559;"></i>
+                Пользователь не привязан к подразделениям
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Табы для мероприятий -->
+<div style="margin-top: 2em;">
+  <div class="ui top attached tabular menu">
+    <a class="active item" data-tab="created">
+      <i class="plus circle icon"></i> Созданные
+      <span class="ui teal circular mini label"><%= @user.events.count %></span>
+    </a>
+    <a class="item" data-tab="responsible">
+      <i class="user circle icon"></i> Ответственный
+      <span class="ui teal circular mini label"><%= @user.responsible_for_events.count %></span>
+    </a>
+  </div>
+  
+  <div class="ui bottom attached active tab segment" data-tab="created">
+    <% if @user.events.any? %>
+      <div class="ui relaxed divided list">
+        <% @user.events.limit(10).each do |event| %>
+          <div class="item">
+            <i class="calendar icon"></i>
+            <div class="content">
+              <div class="header">
+                <%= link_to event.title, event_path(event), class: 'amgu-green-title-text' %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="ui placeholder segment">
+        <div class="ui icon header">
+          <i class="calendar icon"></i>
+          Пользователь не создавал мероприятия
+        </div>
+      </div>
+    <% end %>
+  </div>
+  
+  <div class="ui bottom attached tab segment" data-tab="responsible">
+    <% if @user.responsible_for_events.any? %>
+      <div class="ui relaxed divided list">
+        <% @user.responsible_for_events.limit(10).each do |for_event| %>
+          <div class="item">
+            <i class="calendar icon"></i>
+            <div class="content">
+              <div class="header">
+                <%= link_to for_event.event.title, event_path(for_event.event), class: 'amgu-green-title-text' %>
+              </div>
+              <div class="description">
+                <i class="user icon"></i> <%= for_event.event.responsible_people.first&.role&.name %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="ui placeholder segment">
+        <div class="ui icon header">
+          <i class="user icon"></i>
+          Пользователь не является ответственным за мероприятия
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<!-- Добавим стили -->
+<style>
+  .ui.statistic {
+    border-radius: 8px;
+    padding: 1em;
+    background: #f9f9f9;
+  }
+  
+  .ui.statistic .value {
+    color: #016559;
+  }
+  
+  .ui.amgu-green.statistic {
+    background: #016559 !important;
+    color: white !important;
+  }
+  
+  .ui.amgu-green.statistic .value,
+  .ui.amgu-green.statistic .label {
+    color: white !important;
+  }
+  
+  /* Адаптация для мобильных */
+  @media only screen and (max-width: 767px) {
+    .ui.four.small.statistics {
+      flex-wrap: wrap;
+    }
+    
+    .ui.four.small.statistics .statistic {
+      min-width: 50%;
+      margin-bottom: 0.5em;
+    }
+    
+    .ui.stackable.grid .column {
+      width: 100% !important;
+    }
+    
+    .ui.circular.image {
+      width: 120px !important;
+      height: 120px !important;
+    }
+    
+    .ui.list .item {
+      font-size: 0.85em;
+    }
+  }
+  
+  /* Планшеты */
+  @media only screen and (min-width: 768px) and (max-width: 1024px) {
+    .ui.four.small.statistics .statistic {
+      min-width: 25%;
+    }
+  }
+</style>

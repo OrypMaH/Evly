@@ -1,3 +1,298 @@
-<h1>Регистрация</h1>
+<%# app/views/events/show.html.erb %>
 
-<%= render'form'%>
+<!-- Заголовок в стиле АмГУ -->
+<div class="ui container">
+  <h3 class="ui header orange" style="margin-top: 1em;">
+    <i class="bordered inverted orange icon calendar"></i>
+    <div class="content">
+      <%= @event.title %>
+      <div class="sub header">
+        Просмотр мероприятия
+      </div>
+    </div>
+  </h3>
+
+  <!-- Верхняя навигационная панель (зеленая) -->
+  <div class="ui grey inverted menu top attached amgu-green">
+    <%= link_to :back, class: 'item' do %>
+      <i class="arrow left icon"></i> Назад
+    <% end %>
+    
+    <%= link_to events_path, class: 'item' do %>
+      <i class="list icon"></i> К списку мероприятий
+    <% end %>
+    
+    <div class="right menu">
+      <% if can?(:update, @event) %>
+        <%= link_to edit_event_path(@event), class: 'item' do %>
+          <i class="edit icon"></i> Редактировать
+        <% end %>
+      <% end %>
+      
+      <% if can?(:destroy, @event) %>
+        <%= link_to @event, 
+              method: :delete,
+              class: 'item',
+              data: { confirm: "Удалить мероприятие '#{@event.title}'?" } do %>
+          <i class="trash icon"></i> Удалить
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Основной контент -->
+  <div class="ui bottom attached segment" style="padding: 1.5em;">
+    
+    <!-- Основная информация в виде карточек -->
+    <div class="ui stackable grid">
+      <!-- Левая колонка -->
+      <div class="eight wide column">
+        <div class="ui segment">
+          <h4 class="ui header">
+            <i class="info circle icon" style="color: #016559;"></i>
+            Основная информация
+          </h4>
+          
+          <table class="ui very basic compact celled table">
+            <tbody>
+              <tr>
+                <td class="five wide"><strong>Название:</strong></td>
+                <td><%= @event.title %></td>
+              </tr>
+              <tr>
+                <td><strong>Уровень:</strong></td>
+                <td>
+                  <span class="ui tiny label level-<%= @event.level.name.parameterize %>">
+                    <%= @event.level.name %>
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Формат:</strong></td>
+                <td>
+                  <span class="ui tiny basic label">
+                    <%= @event.format %>
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Направление:</strong></td>
+                <td>
+                  <div data-tooltip="<%= @event.direction&.description %>" data-position="top left">
+                    <i class="compass icon"></i>
+                    <%= @event.direction&.name || 'Не указано' %>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Место проведения:</strong></td>
+                <td>
+                  <i class="map marker alternate icon"></i>
+                  <%= @event.location.presence || 'Не указано' %>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Правая колонка -->
+      <div class="eight wide column">
+        <div class="ui segment">
+          <h4 class="ui header">
+            <i class="clock icon" style="color: #016559;"></i>
+            Даты проведения
+          </h4>
+          
+          <table class="ui very basic compact celled table">
+            <tbody>
+              <tr>
+                <td class="five wide"><strong>Дата начала:</strong></td>
+                <td>
+                  <i class="calendar outline icon"></i>
+                  <%= @event.start_date.strftime('%d.%m.%Y') %>
+                  <span class="ui tiny basic label" style="margin-left: 0.5em;">
+                    <i class="clock outline icon"></i>
+                    <%= @event.start_date.strftime('%H:%M') %>
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Дата окончания:</strong></td>
+                <td>
+                  <i class="calendar check outline icon"></i>
+                  <%= @event.end_date.strftime('%d.%m.%Y') %>
+                  <span class="ui tiny basic label" style="margin-left: 0.5em;">
+                    <i class="clock outline icon"></i>
+                    <%= @event.end_date.strftime('%H:%M') %>
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Описание мероприятия -->
+    <% if @event.description.present? %>
+      <div class="ui segment" style="margin-top: 1em;">
+        <h4 class="ui header">
+          <i class="file alternate outline icon" style="color: #016559;"></i>
+          Описание мероприятия
+        </h4>
+        <div class="ui message" style="background: #f9f9f9;">
+          <%= simple_format(@event.description) %>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Ответственные лица -->
+    <div class="ui segment" style="margin-top: 1em;">
+      <h4 class="ui header">
+        <i class="users icon" style="color: #016559;"></i>
+        Ответственные лица
+        <span class="ui teal circular mini label" style="margin-left: 0.5em;">
+          <%= @event.responsible_people.count %>
+        </span>
+      </h4>
+      
+      <% if @event.responsible_people.any? %>
+        <div class="ui three column stackable grid">
+          <% @event.responsible_people.each do |person| %>
+            <div class="column">
+              <div class="ui segment" style="padding: 1em;">
+                <div class="ui items">
+                  <div class="item">
+                    <div class="ui tiny image">
+                      <i class="user circle huge icon" style="color: #016559;"></i>
+                    </div>
+                    <div class="content">
+                      <div class="header"><%= person.user.full_name %></div>
+                      <div class="meta">
+                        <span class="ui tiny label">
+                          <i class="suitcase icon"></i>
+                          <%= person.role.name %>
+                        </span>
+                      </div>
+                      <div class="extra">
+                        <i class="envelope outline icon"></i>
+                        <%= person.user.contact %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="ui placeholder segment" style="background: #f9f9f9; border: 2px dashed #ccc;">
+          <div class="ui icon header" style="color: #666;">
+            <i class="user circle icon" style="color: #016559;"></i>
+            Нет назначенных ответственных лиц
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Участие подразделений -->
+    <div class="ui segment" style="margin-top: 1em;">
+      <h4 class="ui header">
+        <i class="building icon" style="color: #016559;"></i>
+        Участие подразделений
+        <span class="ui teal circular mini label" style="margin-left: 0.5em;">
+          <%= @event.event_departments.count %>
+        </span>
+      </h4>
+      
+      <% if @event.event_departments.any? %>
+        <div style="overflow-x: auto;">
+          <table class="ui small compact celled table">
+            <thead>
+              <tr>
+                <th>Подразделение</th>
+                <th class="center aligned">Участников</th>
+                <th class="center aligned">Дата</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @event.event_departments.each do |ed| %>
+                <tr>
+                  <td>
+                    <strong><%= ed.department.name %></strong>
+                    <% if ed.department.parent %>
+                      <div class="ui tiny grey text">
+                        <i class="level up icon"></i>
+                        <%= ed.department.parent.name %>
+                      </div>
+                    <% end %>
+                  </td>
+                  <td class="center aligned">
+                    <span class="ui teal circular mini label">
+                      <%= ed.participants_count %>
+                    </span>
+                  </td>
+                  <td class="center aligned">
+                    <span class="ui teal circular mini label">
+                      <%= ed.created_at %>
+                    </span>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="ui placeholder segment" style="background: #f9f9f9; border: 2px dashed #ccc;">
+          <div class="ui icon header" style="color: #666;">
+            <i class="building icon" style="color: #016559;"></i>
+            Нет участвующих подразделений
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Дополнительная информация -->
+    <div style="margin-top: 2em;">
+      <div class="ui top attached tabular menu">
+        <a class="active item" data-tab="info">
+          <i class="info circle icon"></i> Детали
+        </a>
+        <a class="item" data-tab="history">
+          <i class="history icon"></i> История
+        </a>
+      </div>
+      
+      <div class="ui bottom attached active tab segment" data-tab="info">
+        <div class="ui list">
+          <div class="item">
+            <i class="calendar icon"></i>
+            <div class="content">
+              <div class="header">Дата создания</div>
+              <div class="description"><%= @event.created_at.strftime('%d.%m.%Y в %H:%M') %></div>
+            </div>
+          </div>
+          <div class="item">
+            <i class="sync icon"></i>
+            <div class="content">
+              <div class="header">Последнее обновление</div>
+              <div class="description"><%= @event.updated_at.strftime('%d.%m.%Y в %H:%M') %></div>
+            </div>
+          </div>
+          <div class="item">
+            <i class="user icon"></i>
+            <div class="content">
+              <div class="header">Создатель</div>
+              <div class="description"><%= @event.creator&.full_name || 'Не указан' %></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="ui bottom attached tab segment" data-tab="history">
+        <p>История изменений будет доступна позже.</p>
+      </div>
+    </div>
+  </div>
+</div>

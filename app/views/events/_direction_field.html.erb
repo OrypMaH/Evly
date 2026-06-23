@@ -1,0 +1,39 @@
+<% event ||= @event %>
+
+
+<div class="field <%= 'error' if event.errors[:direction_id].any? %>" 
+     id="direction-field-container">
+  <%= form.label :direction_id, "Направление воспитательной работы" %>
+  <%= form.collection_select :direction_id, 
+        @directions, 
+        :id, :name,
+        { 
+          include_blank: "Выберете направление воспитательной работы"
+        },
+        { 
+          class: "ui search dropdown", 
+          id: "event_direction_id",
+          data: { 
+            placeholder: "Поиск по названию..." 
+          }
+        } %>
+  
+  <% if event.errors[:direction_id].any? %>
+    <div class="ui pointing red basic label">
+      <% event.errors[:direction_id].each do |error| %>
+        <span><%= error %></span><br>
+      <% end %>
+    </div>
+  <% end %>
+</div>
+
+<script>
+  // Инициализация dropdown с поиском
+  document.addEventListener('turbolinks:load', function() {
+    $('#event_direction_id').dropdown({
+      fullTextSearch: 'exact',
+      preserveHTML: false,
+      sortSelect: true
+    });
+  });
+</script>

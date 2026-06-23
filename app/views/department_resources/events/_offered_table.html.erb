@@ -1,0 +1,142 @@
+<div class="ui segment" style="padding: 0; overflow-x: auto;">
+  <table class="ui small compact celled table">
+    <thead>
+      <tr>
+        <th class="center aligned" style="width: 3%;">ID</th>
+        <th style="width: 8%;" class="table-header">Название</th>
+        <th style="width: 10%;" class="table-header">ООВО</th>
+        <th style="width: 5%;" class="table-header">Уровень</th>
+        <th style="width: 5%;" class="table-header">Формат</th>
+        <th style="width: 8%;" class="table-header">Направление</th>
+        <th class="center aligned" style="width: 5%;" class="table-header">Период проведения</th>
+        <th style="width: 10%;" class="table-header">Статусы подразделений</th>
+        <th class="center aligned" style="width: 5%;" class="table-header">Участники</th>
+        <th class="center aligned">Предложено</th>
+        <th class="center aligned">Создатель</th>
+        <th class="center aligned" style="width: 7%;" class="table-header">Ответственные</th>
+        <th class="center aligned" style="width: 5%;" class="table-header">Действия</th>
+      </tr>
+    </thead>
+    
+    <tbody>
+      <% event_departments.each do |ed| %>
+        <% event = ed.event %>
+        <tr>
+          <td class="center aligned"><%= event.id %></td>
+          
+          <!-- Название -->
+          <td class="title-column">
+            <div class="ui small header" style="margin: 0;">
+              <div class="content">
+                <div class="title-text line-clamp-3" 
+                     data-tooltip="<%= event.title %>" data-position="top left">
+                  <%= event.title %>
+                </div>
+              </div>
+            </div>
+          </td>
+          
+          <!-- ООВО -->
+          <td>
+            <div class="line-clamp-2" style="max-width: 150px;"
+                 data-tooltip="<%= event.educational_organization.name %>" data-position="top left">
+              <%= event.educational_organization.name %>
+            </div>
+          </td>
+          
+          <!-- Уровень -->
+          <td>
+            <span class="ui tiny label level-<%= event.level.name.parameterize %>">
+              <%= event.level.name %>
+            </span>
+          </td>
+          
+          <!-- Формат -->
+          <td>
+              <%= event.format %>
+          </td>
+          
+          <!-- Направление -->
+          <td>
+            <div style="max-width: 120px;">
+              <%= format_direction(event.direction) %>
+            </div>
+          </td>
+          
+          <!-- Период проведения -->
+          <td class="center aligned">
+            <div style="font-size: 0.9em;" class="ui 
+              <% if event.ongoing? %>
+                green horizontal label">
+              <% elsif event.upcoming? %>
+                blue horizontal label">
+              <% else %>
+                grey horizontal label">
+              <% end %>
+              <%= format_event_period(event.start_date, event.end_date) %>
+            </div>
+          </td>
+
+          <!-- Статусы подразделений -->
+          <td>
+            <div class="ui mini labels">
+              <% event.event_departments.each do |eded| %>
+                <div class="ui <%= eded.status %> label" 
+                     data-position="top center">
+                  <%= link_to_department(eded.department) %>
+                  <% if eded.status == 'approved' && eded.participants_count > 0 %>
+                    <div class="detail"><%= eded.participants_count %></div>
+                  <% end %>
+                </div>
+              <% end %>
+              <% if event.event_departments.empty? %>
+                <span class="ui grey mini label">Нет</span>
+              <% end %>
+            </div>
+          </td>
+          
+          <!-- Участники -->
+          <td class="center aligned">
+            <div class="ui teal circular mini label">
+              <%= event.people %>
+            </div>
+          </td>
+
+          <!-- Предложено -->
+          <td class="center aligned">
+            <%= ed.created_at.strftime('%d.%m.%Y') if ed %>
+            <%= link_to_user(ed.proposed_by) if ed %>
+          </td>
+          
+          <!-- Создатель -->
+          <td class="center aligned">
+            <%= link_to_user(event.creator) %>
+          </td>
+          
+          <!-- Ответственные -->
+          <td class="center aligned">
+            <div class="ui mini labels">
+              <% if event.responsible_people.present? %>
+                <% event.responsible_people.each do |person| %>
+                  <div class="ui basic mini label" 
+                       data-tooltip="<%= person.user.full_name %> - <%= person.role.name %>" 
+                       data-position="top center">
+                    <i class="user icon"></i>
+                    <%= link_to_short_user(person.user) %>
+                  </div>
+                <% end %>
+              <% else %>
+                <span class="ui grey mini label">—</span>
+              <% end %>
+            </div>
+          </td>
+          
+          <!-- Действия -->
+          <td class="center aligned">
+            <%= render_event_buttons(ed) %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

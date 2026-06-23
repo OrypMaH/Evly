@@ -1,64 +1,82 @@
 class DepartmentsController < ApplicationController
-  before_action :set_department, only: [:show, :edit, :update, :destroy]
+  before_action :set_department, only: [:show, :edit, :update, :destroy, :role_list]
   before_action :authenticate_user!
-
+  before_action :store_referer
   def index
     if current_user.current_role
-      @departments = current_department.tree
+      @departments = current_user.current_role.department.full_tree
     else
       @departments = []
     end
   end
 
   def show
+    @parent = @department.parent
+    
+    @children = @department.children
+    
+    @participating_events = Event.participating_by(@department).limit(10)
+    
     @roles = @department.roles.includes(:users)
+    
+    @total_users = @department.users.distinct.count
+    @total_events = @participating_events.count
+    authorize_action(:show, @department)
   end
 
   def new
     @department = Department.new(parent_id: params[:parent_id])
+    authorize_action(:create, Department.find_by(id: params[:parent_id]))
   end
 
   def create
     @department = Department.new(department_params)
-    
-    if @department.save
-      redirect_to @department, notice: 'Подразделение успешно создано'
+    if can?(:create, @department)
+      if @department.save
+        redirect_to @department, notice: 'Подразделение успешно создано'
+      else
+        redirect_to new_department_path(parent_id: @department.parent_id)
+      end
     else
-      render :new
+      redirect_to stored_referer, alert: "Недостаточно прав для создания подразделения"
     end
   end
 
   def edit
-    # Убедимся, что подразделение не может быть своим же родителем
-    @available_parents = Department.where.not(id: @department.id)
+    authorize_action(:edit, @department)
   end
 
   def update
-    if @department.update(department_params)
-      redirect_to @department, notice: 'Подразделение успешно обновлено'
+    if can?(:edit, @department)
+      if @department.update(department_params.except(:parent_id))
+        redirect_to @department, notice: 'Подразделение успешно обновлено'
+      else
+        render :edit
+      end
     else
-      @available_parents = Department.where.not(id: @department.id)
-      render :edit
+      redirect_to stored_referer, alert: "Недостаточно прав для редактирования этого подразделения"
     end
   end
 
   def destroy
-    if @department.children.any?
-      redirect_to departments_path, alert: 'Невозможно удалить подразделение с дочерними элементами'
-    elsif @department.roles.any?
-      redirect_to departments_path, alert: 'Невозможно удалить подразделение с привязанными ролями'
+    if can?(:delete, @department)
+      if @department.children.any?
+        redirect_to departments_path, alert: 'Невозможно удалить подразделение с дочерними элементами'
+      elsif @department.roles.any?
+        redirect_to departments_path, alert: 'Невозможно удалить подразделение с привязанными ролями'
+      else
+        @department.destroy
+        redirect_to departments_path, notice: 'Подразделение успешно удалено'
+      end
     else
-      @department.destroy
-      redirect_to departments_path, notice: 'Подразделение успешно удалено'
-    end
+      redirect_to stored_referer, alert: "Недостаточно прав для удаления этого подразделения"
+    end 
   end
 
-  def manage_roles
-      if current_user.current_role
-          @users = current_department.users
-      else
-          @users =[]
-      end
+
+  
+  def role_list
+    @roles = @department.roles.includes(:users)
   end
 
   private

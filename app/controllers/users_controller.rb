@@ -1,12 +1,21 @@
 class UsersController < ApplicationController
-    before_action :get_roles, only: [:edit_roles]
+    include CurrentDepartmentRedirect
+    before_action :store_referer, only: [:select_current_role]
     
-    before_action :authenticate_user!, only: [:manage_roles, :edit_roles, :update_roles, :update, :edit]
+    before_action :authenticate_user!, except: [:new, :create]
     def new
+        if (user_signed_in?)
+            redirect_to root_path
+            return
+        end
         @user = User.new
     end
 
     def create
+        if (user_signed_in?)
+            redirect_to root_path
+            return
+        end
         @user = User.new user_params
         if @user.save
             sign_in @user
@@ -17,56 +26,57 @@ class UsersController < ApplicationController
         end
     end
 
-
-
-    def edit_roles
-        @user = User.find_by id: params[:id]
+    def roles
+        user = User.find(params[:id])
+        
+        roles = user.roles
+        
+        render json: roles.map { |role| 
+            {
+                id: role.id,
+                name: role.name
+            }
+        }
+        rescue ActiveRecord::RecordNotFound
+            render json: { error: 'User not found' }, status: :not_found
     end
-    def update_roles
-        @user = User.find_by id: params[:id]
-        if @user.update(user_role_params)
-            redirect_to edit_roles_user_path
-        else
-            redirect_to edit_roles_user_path
-        end
-    end
+
     def select_current_role
-        @user = current_user # Только для себя
+        @user = current_user
         role = Role.find_by(id: params[:role_id])
         
         if role && @user.roles.include?(role)
             @user.update(current_role: role)
-            redirect_to request.referer || root_path, notice: "Текущая роль изменена на: #{role.name}"
+            
+            redirect_to redirect_with_proper_department,
+                        notice: "Текущая роль изменена на: #{role.name}"
         else
-            redirect_to request.referer || root_path, alert: "Роль не найдена или не назначена вам"
+            redirect_back fallback_location: root_path,
+                        alert: "Роль не найдена или не назначена вам"
         end
     end
-    def update
-        @user = User.find_by id: params[:id]
-        if @user.update user_params
-            redirect_to user_path
-        else
-            render :new
-        end
-    end
-    def edit
-        @user = User.find_by id: params[:id]
-    end
-    def user_params
-        params.require(:user).permit(:surname, :name,:patronymic,:contact,:password, :password_confirmation)
-    end
-    def user_role_params
-        params.require(:user).permit(role_ids:[])
-    end
-    
-    def get_roles
-        @roles = [] #future
-    end
-    
 
+    def update
+        @user = User.find(params[:id])
+        if current_user != @user && !current_user.current_role.is_admin?
+                redirect_to edit_user_path(current_user)
+        end
+        if  @user.update(user_params)
+            redirect_to user_path(@user)
+        else
+            redirect_to edit_user_path(@user)
+        end
+    end
+    
+    def edit
+        @user = User.find(params[:id])
+        if current_user != @user && !current_user.current_role.is_admin?
+                redirect_to edit_user_path(current_user)
+        end
+    end
+    
     def show
-    # Пустой action чтобы избежать ошибки
-        head :no_content
+        @user = User.find(params[:id])
     end
     
     def search
@@ -89,5 +99,12 @@ class UsersController < ApplicationController
             puts "Empty query"
             render json: { users: [] }
         end
+    end
+    private
+    def user_params
+        params.require(:user).permit(:surname, :name,:patronymic,:contact,:password, :password_confirmation)
+    end
+    def user_role_params
+        params.require(:user).permit(role_ids:[])
     end
 end

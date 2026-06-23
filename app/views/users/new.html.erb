@@ -1,4 +1,186 @@
+<div class="ui middle aligned center aligned grid" style="margin-top: 2em;">
+  <div class="eight wide column">
+    <h2 class="ui header" style="color: #016559;">
+      <i class="user plus icon" style="color: #016559;"></i>
+      <div class="content">
+        Регистрация
+      </div>
+    </h2>
+    
+    <%= form_with model: @user, class: "ui large form" do |f| %>
+      <div class="ui stacked segment">
+        <!-- Фамилия -->
+        <div class="field">
+          <div class="ui left icon input">
+            <i class="user icon" style="color: #016559;"></i>
+            <%= f.text_field :surname, 
+                  required: true,
+                  maxlength: 50,
+                  placeholder: "Фамилия" %>
+          </div>
+        </div>
+        
+        <!-- Имя -->
+        <div class="field">
+          <div class="ui left icon input">
+            <i class="user icon" style="color: #016559;"></i>
+            <%= f.text_field :name, 
+                  required: true,
+                  maxlength: 50,
+                  placeholder: "Имя" %>
+          </div>
+        </div>
+        
+        <!-- Отчество -->
+        <div class="field">
+          <div class="ui left icon input">
+            <i class="user icon" style="color: #016559;"></i>
+            <%= f.text_field :patronymic, 
+                  required: true,
+                  maxlength: 50,
+                  placeholder: "Отчество" %>
+          </div>
+        </div>
+        
+        <!-- Контактные данные -->
+        <div class="field">
+          <div class="ui left icon input">
+            <i class="envelope icon" style="color: #016559;"></i>
+            <%= f.text_field :contact, 
+                  required: true,
+                  maxlength: 50,
+                  placeholder: "Email или номер телефона" %>
+          </div>
+        </div>
+        
+        <div class="ui divider"></div>
+        
+        <!-- Пароль -->
+        <div class="field">
+          <div class="ui left icon input">
+            <i class="lock icon" style="color: #016559;"></i>
+            <%= f.password_field :password, 
+                  placeholder: "Пароль" %>
+          </div>
+        </div>
+        
+        <!-- Подтверждение пароля -->
+        <div class="field">
+          <div class="ui left icon input">
+            <i class="lock icon" style="color: #016559;"></i>
+            <%= f.password_field :password_confirmation, 
+                  placeholder: "Повторите пароль" %>
+          </div>
+        </div>
+        
+        <!-- Кнопка регистрации -->
+        <%= f.submit "Зарегистрироваться", 
+              class: "ui fluid large button",
+              style: "background: #016559; color: white; margin-top: 1em;" %>
+      </div>
+      
+      <!-- Сообщения об ошибках -->
+      <% if @user.errors.any? %>
+        <div class="ui error message visible">
+          <i class="close icon"></i>
+          <div class="header">
+            Проверьте правильность заполнения формы:
+          </div>
+          <ul class="list">
+            <% @user.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+    <% end %>
+    
+    <div class="ui message">
+      Уже есть аккаунт? <%= link_to "Войти", new_session_path, style: "color: #016559;" %>
+    </div>
+  </div>
+</div>
 
-<h1>Регистрация</h1>
+<!-- JavaScript для валидации и закрытия сообщений -->
+<script>
+  document.addEventListener('turbolinks:load', function() {
+    // Валидация формы
+    $('.ui.form').form({
+      fields: {
+        surname: {
+          identifier: 'user[surname]',
+          rules: [{
+            type: 'empty',
+            prompt: 'Введите фамилию'
+          }]
+        },
+        name: {
+          identifier: 'user[name]',
+          rules: [{
+            type: 'empty',
+            prompt: 'Введите имя'
+          }]
+        },
+        patronymic: {
+          identifier: 'user[patronymic]',
+          rules: [{
+            type: 'empty',
+            prompt: 'Введите отчество'
+          }]
+        },
+        contact: {
+          identifier: 'user[contact]',
+          rules: [{
+            type: 'empty',
+            prompt: 'Введите контактные данные'
+          }]
+        },
+        password: {
+          identifier: 'user[password]',
+          rules: [{
+            type: 'empty',
+            prompt: 'Введите пароль'
+          }, {
+            type: 'length[6]',
+            prompt: 'Пароль должен быть не менее 6 символов'
+          }]
+        },
+        password_confirmation: {
+          identifier: 'user[password_confirmation]',
+          rules: [{
+            type: 'match[user[password]]',
+            prompt: 'Пароли не совпадают'
+          }]
+        }
+      }
+    });
+    
+    // Закрытие сообщения об ошибках
+    $('.message .close').on('click', function() {
+      $(this).closest('.message').transition('fade');
+    });
+  });
+</script>
 
-<%= render'form'%>
+<!-- Дополнительные стили -->
+<style>
+  .ui.form .field {
+    margin-bottom: 1em;
+  }
+  
+  .ui.stacked.segment {
+    padding: 2em;
+  }
+  
+  .ui.divider {
+    margin: 1.5em 0;
+  }
+  
+  /* Адаптация для мобильных */
+  @media only screen and (max-width: 767px) {
+    .eight.wide.column {
+      width: 90% !important;
+      margin: 0 auto;
+    }
+  }
+</style>

@@ -1,0 +1,29 @@
+<div class="ui container">
+  <div class="ui segment">
+    <h1 class="ui header">
+      <i class="edit icon"></i>
+      Редактирование направления воспитательной работы
+    </h1>
+    
+    <div class="ui info message">
+      <div class="header">Информация о направлении</div>
+      <ul class="list">
+        <li>Подразделение: <strong><%= @direction.department.name %></strong></li>
+        <li>Создан: <strong><%= @direction.created_at.strftime('%d.%m.%Y %H:%M') %></strong></li>
+      </ul>
+    </div>
+    
+    <%= render 'form', department: @department %>
+    
+    <div class="ui segment">
+      <div class="ui buttons">
+        <%= link_to "#", class: 'ui button' do %>
+          <i class="arrow left icon"></i> Назад
+        <% end %>
+        <%= link_to department_directions_path(@department), class: 'ui button' do %>
+          <i class="list icon"></i> К списку планов
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

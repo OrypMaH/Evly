@@ -1,0 +1,193 @@
+<div class="ui container">
+  <h3 class="ui header orange" style="margin-top: 1em;">
+    <i class="bordered inverted orange icon calendar alternate"></i>
+    <div class="content">
+      Планы работы
+      <div class="sub header">Подразделение: <%= @department.name %></div>
+    </div>
+  </h3>
+
+  <div class="ui grey inverted menu top attached amgu-green" >
+    <!-- Фильтры слева -->
+    <%= link_to department_plans_path(period: 'all'), 
+                class: "item #{'active' if @period_filter == 'all'}" do %>
+      <i class="list icon"></i>
+      Все планы
+      <div class="ui red circular mini label"><%= @department.plans.count %></div>
+    <% end %>
+    
+    <%= link_to department_plans_path(period: 'active'), 
+                class: "item #{'active' if @period_filter == 'active'}" do %>
+      <i class="play icon"></i>
+      Активные
+      <div class="ui red circular mini label"><%= @active_plans.count %></div>
+    <% end %>
+    
+    <%= link_to department_plans_path(period: 'upcoming'), 
+                class: "item #{'active' if @period_filter == 'upcoming'}" do %>
+      <i class="clock icon"></i>
+      Будущие
+      <div class="ui red circular mini label"><%= @upcoming_plans.count %></div>
+    <% end %>
+    
+    <%= link_to department_plans_path(period: 'past'), 
+                class: "item #{'active' if @period_filter == 'past'}" do %>
+      <i class="check icon"></i>
+      Завершенные
+      <div class="ui red circular mini label"><%= @past_plans.count %></div>
+    <% end %>
+    
+    <% if can?(:create, @department.plans.new) %>
+      <div class="right menu">
+        <%= link_to new_department_plan_path(@department), 
+                    class: 'item' do %>
+          <i class="plus icon"></i> Создать план
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Контентная часть -->
+  <div class="ui bottom attached segment" style="padding: 1em;">
+    <% if @plans.any? %>
+      <!-- Таблица планов в компактном стиле -->
+      <div style="overflow-x: auto;">
+        <table class="ui small compact celled table" >
+          <thead>
+            <tr>
+              <th style="width: 20%;">Название плана</th>
+              <th class="center aligned" style="width: 15%;">Период</th>
+              <th class="center aligned" style="width: 8%;">Мероприятий</th>
+              <th class="center aligned" style="width: 12%;">Статус</th>
+              <th class="center aligned" style="width: 10%;">Создатель</th>
+              <th class="center aligned" style="width: 15%;">Действия</th>
+            </tr>
+          </thead>
+          
+          <tbody>
+            <% @plans.each do |plan| %>
+              <tr>
+                <td>
+                  <div class="ui small header" style="margin: 0;">
+                    <div class="content">
+                      <%= link_to department_plan_path(@department, plan), class: 'amgu-green-title-text' do %>
+                        <%= plan.title %>
+                      <% end %>
+                      <% if plan.description.present? %>
+                        <div class="sub header" style="font-size: 0.8em; margin-top: 0.2em;">
+                          <span data-tooltip="<%= plan.description %>" data-position="top left">
+                            <%= truncate(plan.description, length: 60) %>
+                          </span>
+                        </div>
+                      <% end %>
+                    </div>
+                  </div>
+                </td>
+                
+                <td class="center aligned">
+                  <div style="font-size: 0.9em;">
+                    <i class="calendar outline icon"></i>
+                    <%= plan.start_date.strftime('%d.%m.%Y') %>
+                  </div>
+                  <div style="font-size: 0.9em; margin-top: 0.2em;">
+                    <i class="calendar check outline icon"></i>
+                    <%= plan.end_date.strftime('%d.%m.%Y') %>
+                  </div>
+                </td>
+                
+                <td class="center aligned">
+                  <div class="ui <%= plan.plan_events.any? ? 'teal' : 'grey' %> circular mini label" 
+                       style="font-size: 0.9em; padding: 0.5em 0.8em;">
+                    <%= plan.plan_events.count %>
+                  </div>
+                </td>
+                
+                <td class="center aligned">
+                  <% if plan.active? %>
+                    <div class="ui green mini label">
+                      <i class="play icon"></i> Активен
+                    </div>
+                  <% elsif plan.upcoming? %>
+                    <div class="ui blue mini label">
+                      <i class="clock icon"></i> Старт <%= plan.start_date.strftime('%d.%m') %>
+                    </div>
+                  <% else %>
+                    <div class="ui grey mini label">
+                      <i class="check icon"></i> Завершен
+                    </div>
+                  <% end %>
+                </td>
+                
+                <td class="center aligned">
+                  <div class="ui tiny basic label" data-tooltip="<%= plan.creator.full_name %>">
+                    <i class="user icon"></i>
+                    <%= link_to_short_user(plan.creator) %>
+                  </div>
+                </td>
+                
+                <td class="center aligned">
+                  <div class="ui mini buttons">
+                    <%= link_to department_plan_path(@department, plan), 
+                          class: 'ui icon button', 
+                          data: { tooltip: 'Просмотреть', position: 'top center' } do %>
+                      <i class="eye icon"></i>
+                    <% end %>
+                    
+                    <% if can?(:edit, plan) %>
+                      <%= link_to edit_department_plan_path(@department, plan), 
+                            class: 'ui icon button', 
+                            data: { tooltip: 'Редактировать', position: 'top center' } do %>
+                        <i class="edit icon"></i>
+                      <% end %>
+                    <% end %>
+                    
+                    <%= link_to export_excel_plan_path(plan, format: :xlsx), 
+                          class: "ui icon button green",
+                          data: { tooltip: 'Скачать Excel', position: 'top center' } do %>
+                      <i class="file excel icon"></i>
+                    <% end %>
+                    
+                    <% if can?(:delete, plan) %>
+                      <%= link_to plan_path(plan), 
+                            method: :delete,
+                            class: 'ui icon button negative',
+                            data: { 
+                              confirm: "Удалить план '#{plan.title}'?",
+                              tooltip: 'Удалить',
+                              position: 'top center' 
+                            } do %>
+                        <i class="trash icon"></i>
+                      <% end %>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="ui placeholder segment" >
+        <div class="ui icon header" style="color: #666;">
+          <i class="calendar alternate outline icon" style="color: #016559;"></i>
+          Планы не найдены
+        </div>
+        <p style="color: #888; margin: 1em 0;">
+          В подразделении "<%= @department.name %>" пока нет созданных планов.
+        </p>
+        <% if can?(:create, @department.plans.new) %>
+          <div style="margin-top: 1em;">
+            <%= link_to new_department_plan_path(@department), 
+                  class: 'ui primary button' do %>
+              <i class="plus icon"></i> Создать первый план
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<% content_for :javascript_packs do %>
+  <%= javascript_pack_tag 'plans' %>
+<% end %>

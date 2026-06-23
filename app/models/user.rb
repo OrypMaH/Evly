@@ -3,20 +3,44 @@ class User < ApplicationRecord
   has_many :user_roles, 
         dependent: :destroy
   has_many :roles, 
-        through: :user_roles
+        through: :user_roles   
+  has_many :responsible_for_events, 
+        class_name: 'ResponsiblePerson'
+  has_many :events_as_responsible, 
+        through: :responsible_for_events, 
+        source: :event
   belongs_to :current_role, 
         class_name: 'Role', 
         optional: true
   has_one :department, 
         through: :current_role,
         source: :department
+  has_one :current_department, 
+        through: :current_role,
+        source: :department
   has_many :departments, 
         through: :roles,
          source: :department
+  has_many :events, class_name: 'Event', foreign_key: 'creator_id', dependent: :nullify
   validate :current_role_must_be_assigned
+  after_commit :refresh_current_role, on: [:create, :update]
+
+  scope :with_roles_in_department, ->(department) {
+  joins(:roles)
+    .where(roles: { department: department })
+    .distinct
+    .includes(roles: :department)
+}
   
   def full_name
     parts = [surname, name, patronymic].compact
+    parts.any? ? parts.join(' ') : 'Не указано'
+  end
+  def short_name
+    parts = [surname]
+    parts << "#{name[0]}." if name.present?
+    parts << "#{patronymic[0]}." if patronymic.present?
+
     parts.any? ? parts.join(' ') : 'Не указано'
   end
   
@@ -31,6 +55,23 @@ class User < ApplicationRecord
       errors.add(:current_role, "не назначена пользователю")
     end
   end
+
+  def refresh_current_role
+    return if current_role_id.blank?
+    
+    unless roles.exists?(id: current_role_id)
+      new_current_role = roles.any? ? roles.first : nil
+      update(current_role: new_current_role)
+    end
+  end
+  def direction_list
+      result = []
+      roles.each do |role|
+          next unless role.department
+          result.concat(role.department.direction_tree)
+      end
+      result.uniq
+  end
   private
 
   def current_role_must_be_assigned
@@ -42,6 +83,4 @@ class User < ApplicationRecord
       errors.add(:current_role_id, "должна быть среди назначенных пользователю ролей")
     end
   end
-  
-  
 end

@@ -1,115 +1,304 @@
+<%# app/views/departments/show.html.erb %>
+
+<!-- Заголовок в стиле АмГУ -->
 <div class="ui container">
-  <div class="ui segment">
-    <h1 class="ui header">
-      <i class="building icon"></i>
-      <%= @department.name %>
-    </h1>
-    <% if @department.description.present? %>
-      <p><%= @department.description %></p>
+  <!-- Хлебные крошки -->
+  <div class="ui breadcrumb" style="margin: 1em 0;">
+    <%= link_to 'Подразделения', departments_path, class: 'section' %>
+    <i class="right angle icon divider"></i>
+    <% @department.ancestors.each do |ancestor| %>
+      <%= link_to ancestor.name, department_path(ancestor), class: 'section' %>
+      <i class="right angle icon divider"></i>
     <% end %>
+    <div class="active section"><%= @department.name %></div>
   </div>
 
-  <div class="ui segment">
-    <h3 class="ui header">Роли в подразделении</h3>
+  <!-- Верхняя навигационная панель (зеленая) -->
+  <div class="ui amgu-green inverted menu top attached" style="border-radius: 8px 8px 0 0 !important;">
+    <%= link_to departments_path, class: 'item' do %>
+      <i class="arrow left icon"></i> К списку подразделений
+    <% end %>
     
-    <div class="ui relaxed divided list">
-      <% @department.roles.each do |role| %>
-        <div class="item">
-          <div class="content">
-            <div class="header">
-              <%= role.name %>
-              
-              <div class="ui buttons" style="float: right;">
-                <!-- Кнопка для назначения роли -->
-                <button class="ui primary button assign-role-btn" 
-                        data-role-id="<%= role.id %>"
-                        data-role-name="<%= role.name %>">
-                  <i class="user plus icon"></i>
-                  Назначить пользователю
-                </button>
-                
-                <%= link_to 'Удалить', role_path(role), 
-                    method: :delete, 
-                    data: { confirm: 'Удалить роль?' },
-                    class: 'ui red button' %>
+    <span class="item">
+      <i class="sitemap icon"></i>
+      <%= @department.name %>
+    </span>
+    
+    <div class="right menu">
+      <% if can?(:edit, @department) %>
+        <%= link_to edit_department_path(@department), class: 'item' do %>
+          <i class="edit icon"></i> Редактировать
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Основной контент -->
+  <div class="ui bottom attached segment" style="padding: 1.5em;">
+    <!-- Основная информация в двух колонках -->
+    <div class="ui stackable grid">
+      <!-- Левая колонка - Информация и иерархия -->
+      <div class="eight wide column">
+        <div class="ui segment">
+          <h4 class="ui header">
+            <i class="info circle icon"></i>
+            Информация о подразделении
+          </h4>
+          
+          <table class="ui very basic compact celled table">
+            <tbody>
+              <tr>
+                <td class="five wide"><strong>Полное название:</strong></td>
+                <td><%= @department.name %></td>
+              </tr>
+              <% if @department.description.present? %>
+                <tr>
+                  <td><strong>Описание:</strong></td>
+                  <td><%= @department.description %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Иерархия подразделений -->
+        <div class="ui segment" style="margin-top: 1em;">
+          <h4 class="ui header">
+            <i class="sitemap icon"></i>
+            Иерархия подразделения
+          </h4>
+          
+          <% if @parent %>
+            <div class="ui vertical segment" style="padding-top: 0;">
+              <h5 class="ui header">
+                <i class="level up icon"></i>
+                Вышестоящее подразделение
+              </h5>
+              <div class="ui relaxed list">
+                <div class="item">
+                  <div class="ui <%= 'amgu-green' %> ribbon label" style="left: -1.2em;">
+                    <i class="folder icon"></i>
+                  </div>
+                  <div class="content" style="padding-left: 3em;">
+                    <%= link_to @parent.name, department_path(@parent), class: 'header title-text' %>
+                    <% if @parent.description.present? %>
+                      <div class="description"><%= truncate(@parent.description, length: 50) %></div>
+                    <% end %>
+                  </div>
+                </div>
               </div>
             </div>
-            
-            <div class="description">
-              <% if role.users.any? %>
-                <strong>Пользователи с этой ролью:</strong>
-                <div class="ui horizontal list" style="margin-top: 5px;">
-                  <% role.users.each do |user| %>
-                    <div class="item">
-                      <div class="ui tiny label">
-                        <%= user.full_name %>
-                        <%= link_to remove_user_role_path(role, user_id: user.id), 
-                                    method: :delete, 
-                                    class: 'delete-icon',
-                                    data: { confirm: 'Снять роль с пользователя?' },
-                                    remote: true do %>
-                          <i class="times icon"></i>
+          <% end %>
+          
+          <% if @children.any? %>
+            <div class="ui vertical segment">
+              <h5 class="ui header">
+                <i class="level down icon"></i>
+                Дочерние подразделения
+                <span class="ui teal circular mini label"><%= @children.count %></span>
+              </h5>
+              <div class="ui relaxed divided list">
+                <% @children.each do |child| %>
+                  <div class="item">
+                    <i class="folder outline icon" style="color: #016559;"></i>
+                    <div class="content">
+                      <%= link_to child.name, department_path(child), class: 'header title-text' %>
+                      <% if child.description.present? %>
+                        <div class="description"><%= truncate(child.description, length: 40) %></div>
+                      <% end %>
+                      <div class="extra">
+                        <div class="ui tiny horizontal list">
+                          <div class="item">
+                            <i class="users icon"></i>
+                            <%= child.users.count %>
+                          </div>
+                          <div class="item">
+                            <i class="sitemap icon"></i>
+                            <%= child.children.count %>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          <% else %>
+            <div class="ui placeholder segment" style="background: #f9f9f9; border: 2px dashed #ccc;">
+              <div class="ui icon header" style="color: #666;">
+                <i class="sitemap icon" style="color: #016559;"></i>
+                Нет дочерних подразделений
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+      
+      <!-- Правая колонка - Роли и сотрудники -->
+      <div class="eight wide column">
+        <!-- Роли в подразделении -->
+        <div class="ui segment">
+          <h4 class="ui header">
+            <i class="user secret icon"></i>
+            <%= link_to "Роли в подразделении", department_roles_path(@department) %> 
+            <span class="ui teal circular mini label"><%= @roles.count %></span>
+          </h4>
+          
+          <% if @roles.any? %>
+            <div class="ui relaxed divided list">
+              <% @roles.each do |role| %>
+                <div class="item">
+                  <i class="user circle icon" style="color: #016559;"></i>
+                  <div class="content">
+                    <div class="header">
+                      <span class="title-text"> <%= role.name %> </span>
+                      <% if role.description.present? %>
+                        <div class="sub header"><%= truncate(role.description, length: 30) %></div>
+                      <% end %>
+                    </div>
+                    <div class="description">
+                      <div class="ui mini images">
+                        <% role.users.limit(5).each do |user| %>
+                          <div class="ui tiny basic label" data-tooltip="<%= user.full_name %>" data-position="top center">
+                            <i class="user icon"></i>
+                            <%= user.surname %>
+                          </div>
+                        <% end %>
+                        <% if role.users.count > 5 %>
+                          <span class="ui tiny label">+<%= role.users.count - 5 %></span>
                         <% end %>
                       </div>
                     </div>
-                  <% end %>
+                  </div>
                 </div>
-              <% else %>
-                <span class="ui tiny text muted">Нет назначенных пользователей</span>
               <% end %>
             </div>
+          <% else %>
+            <div class="ui placeholder segment" style="background: #f9f9f9; border: 2px dashed #ccc;">
+              <div class="ui icon header" style="color: #666;">
+                <i class="user secret icon" style="color: #016559;"></i>
+                В этом подразделении еще нет ролей
+              </div>
+            </div>
+          <% end %>
+          
+          <% if can?(:create, Role.new(department: @department)) %>
+            <div style="margin-top: 1em; text-align: center;">
+              <%= link_to new_role_path(department_id: @department.id), 
+                    class: 'ui button' do %>
+                <i class="plus icon"></i> Добавить роль
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Ключевые сотрудники -->
+        <div class="ui segment" style="margin-top: 1em;">
+          <h4 class="ui header">
+            <i class="users icon"></i>
+            Сотрудники
+          </h4>
+          
+          <% if @department.users.any? %>
+            <div class="ui three column stackable grid">
+              <% @department.users.limit(6).each do |user| %>
+                <div class="column">
+                  <div class="ui segment" style="padding: 1em; text-align: center;">
+                    <i class="user circle huge icon" style="color: #016559;"></i>
+                    <div class="header" style="margin-top: 0.5em;">
+                      <%= link_to user.full_name, user_path(user), class: 'title-text' %>
+                    </div>
+                    <div class="meta">
+                      <% if user.current_role %>
+                        <span class="ui tiny label"><%= user.current_role.name %></span>
+                      <% end %>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+            
+            <% if @department.users.count > 6 %>
+              <div style="margin-top: 1em; text-align: center;">
+                <%= link_to department_users_path(@department), class: 'ui basic button' do %>
+                  Все сотрудники (<%= @department.users.count %>)
+                <% end %>
+              </div>
+            <% end %>
+          <% else %>
+            <div class="ui placeholder segment" style="background: #f9f9f9; border: 2px dashed #ccc;">
+              <div class="ui icon header" style="color: #666;">
+                <i class="users icon" style="color: #016559;"></i>
+                Нет сотрудников в подразделении
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Мероприятия подразделения -->
+    <div class="ui segment" style="margin-top: 1em;">
+      <h4 class="ui header">
+        <i class="calendar check icon"></i>
+        <%= link_to "Мероприятия подразделения", department_events_path(@department) %>
+        <span class="ui teal circular mini label"><%= @department.approved_event_departments.count %></span>
+      </h4>
+      
+      <% if @participating_events.any? %>
+        <div style="overflow-x: auto;">
+          <table class="ui small compact celled table">
+            <thead>
+              <tr>
+                <th>Мероприятие</th>
+                <th class="center aligned">Дата</th>
+                <th class="center aligned">Уровень</th>
+                <th class="center aligned">Участников</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @participating_events.limit(10).each do |event| %>
+                <tr>
+                  <td>
+                    <div class="ui small header" style="margin: 0;">
+                      <div class="content">
+                        <%= link_to event.title, event_path(event), class: 'title-text' %>
+                        <div class="sub header" style="font-size: 0.8em;">
+                          <i class="user icon"></i> <%= event.creator.surname %>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="center aligned">
+                    <%= event.start_date.strftime('%d.%m.%Y') %>
+                  </td>
+                  <td class="center aligned">
+                    <span class="ui tiny label level-<%= event.level.name.parameterize %>">
+                      <%= event.level.name %>
+                    </span>
+                  </td>
+                  <td class="center aligned">
+                    <span class="ui teal circular mini label">
+                      <%= event.people %>
+                    </span>
+                  </td>
+                  <td class="center aligned">
+                    <% participation = event.approved_event_departments.find_by(department: @department) %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="ui placeholder segment" style="background: #f9f9f9; border: 2px dashed #ccc;">
+          <div class="ui icon header" style="color: #666;">
+            <i class="calendar icon" style="color: #016559;"></i>
+            Подразделение не участвует в мероприятиях
           </div>
         </div>
       <% end %>
     </div>
-    
-    <%= link_to 'Добавить роль', new_role_path(department_id: @department.id), 
-                class: 'ui green button' %>
   </div>
 </div>
 
-<!-- Модальное окно для назначения роли -->
-<div class="ui modal" id="assignRoleModal">
-  <i class="close icon"></i>
-  <div class="header">
-    Назначить роль: <span id="modalRoleName"></span>
-  </div>
-  <div class="content">
-    <div class="ui form">
-      <div class="field">
-        <label>Поиск пользователя</label>
-        <div class="ui search" id="userSearch" style="width: 100%;">
-          <div class="ui icon input" style="width: 100%;">
-            <input class="prompt" type="text" placeholder="Введите имя или фамилию...">
-            <i class="search icon"></i>
-          </div>
-          <div class="results" style="
-            position: absolute;
-            width: 100%;
-            background: white;
-            border: 1px solid #ddd;
-            border-top: none;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
-          "></div>
-        </div>
-      </div>
-      
-      <div id="selectedUser" style="display: none; margin-top: 15px;">
-        <div class="ui success message">
-          <div class="header">Выбран пользователь:</div>
-          <p id="selectedUserName"></p>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="actions">
-    <div class="ui black deny button">Отмена</div>
-    <button class="ui primary button" id="confirmAssign" disabled>
-      <i class="user plus icon"></i>
-      Назначить роль
-    </button>
-  </div>
-</div>

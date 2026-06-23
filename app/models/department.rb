@@ -1,5 +1,4 @@
 class Department < ApplicationRecord
-  # Иерархические связи
   belongs_to :parent, 
             class_name: 'Department', 
             optional: true
@@ -7,13 +6,19 @@ class Department < ApplicationRecord
           class_name: 'Department', 
           foreign_key: :parent_id, 
           dependent: :nullify
-  has_many :roles, 
-          dependent: :destroy
-  has_many :users, 
-          through: :roles,
-          source: :users
-  validates :name, presence: true, 
-            uniqueness: true
+          
+  has_many :roles, dependent: :destroy
+  has_many :users, through: :roles
+  has_many :directions, dependent: :destroy 
+
+  has_many :offered_event_departments, dependent: :destroy
+  has_many :approved_event_departments, dependent: :destroy
+  has_many :offered_events, through: :offered_event_departments, class_name: 'Event'
+  has_many :approved_events, through: :approved_event_departments, class_name: 'Event'
+
+  has_many :plans, dependent: :destroy
+
+  validates :name, presence: true, uniqueness: true
   validate :cannot_be_own_parent
   
   # Методы для иерархии
@@ -21,17 +26,25 @@ class Department < ApplicationRecord
     parent_id.nil?
   end
   
+  def is_it_ancestor?(dep)
+    current = self
+    while current.parent.present?
+      current = current.parent
+      return true if current == dep
+    end
+    false
+  end
   def ancestors
     return [] if root?
     parent.ancestors + [parent]
   end
   
   def descendants
-    children + children.flat_map(&:descendants)
+    children.flat_map { |child| [child] + child.descendants }
   end
 
   def tree
-    (ancestors + [self] + descendants)
+    ([self] + descendants)
   end
   
   def full_path
@@ -41,9 +54,15 @@ class Department < ApplicationRecord
       "#{parent.full_path} -> #{name}"
     end
   end
-  
-  def descendants_roles
-
+  def tree_to_root
+    if parent
+      parent.tree_to_root + [self]
+    else
+      [self]
+    end
+  end
+  def full_tree
+    (tree_to_root + tree).uniq
   end
 
   def self.root
@@ -53,6 +72,23 @@ class Department < ApplicationRecord
   def self.hierarchical
     # Возвращает подразделения в иерархическом порядке
     all.includes(:parent).sort_by { |dept| dept.ancestors.size }
+  end
+
+  def department
+    return self
+  end
+
+  def current_plans
+    plans.current.order(start_date: :desc)
+  end
+  
+  # Активные планы (текущие)
+  def active_plans
+    plans.active.order(start_date: :desc)
+  end
+
+  def direction_tree
+    return self.directions + self.parent&.direction_tree.to_a
   end
 
   private

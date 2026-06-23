@@ -1,0 +1,53 @@
+<%# app/views/events/_responsible_person_search.html.erb %>
+<div class="ui segment">
+  <h4 class="ui header">Добавить ответственное лицо</h4>
+  
+  <!-- Поиск пользователя -->
+  <div id="userSearch" class="ui search">
+    <div class="ui icon input" style="width: 100%;">
+      <input id="userSearchInput" 
+             class="prompt" 
+             type="text" 
+             placeholder="Поиск пользователя по имени...">
+      <i class="search icon"></i>
+    </div>
+    <div id="searchResults" class="results"></div>
+  </div>
+  
+  <!-- Выбранный пользователь -->
+  <div id="selectedUser" class="ui segment" style="display: none; margin-top: 1rem;">
+    <div class="ui grid">
+      <div class="twelve wide column">
+        <div class="ui header">
+          <i class="user circle icon"></i>
+          <span id="selectedUserName"></span>
+        </div>
+        <input type="hidden" id="selectedUserId">
+      </div>
+      <div class="four wide column right aligned">
+        <button id="cancelUserSelection" class="ui basic red button" type="button">
+          <i class="times icon"></i> Отменить
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Выбор должности (появляется после выбора пользователя) -->
+  <div id="roleSelectContainer" style="display: none; margin-top: 1rem;">
+    <div class="field">
+      <label>Должность пользователя</label>
+      <select id="userRoleSelect" class="ui dropdown">
+        <option value="">Выберете должность</option>
+      </select>
+    </div>
+    
+    <div style="margin-top: 1rem;">
+      <button id="addResponsibleBtn" 
+              class="ui primary button" 
+              type="button"
+              disabled>
+        <i class="plus icon"></i> Добавить ответственное лицо
+      </button>
+    </div>
+  </div>
+</div>

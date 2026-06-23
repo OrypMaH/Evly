@@ -1,0 +1,48 @@
+<div class="ui modal" id="new_educational_organization_modal">
+  <i class="close icon"></i>
+  <div class="header">
+    <i class="university icon"></i>
+    Добавить образовательную организацию
+  </div>
+  <div class="content">
+    <div id="modal_error_message" class="ui error message" style="display: none"></div>
+    
+    <%= form_with model: EducationalOrganization.new, id: "new_educational_organization_form", class: "ui form" do |f| %>
+      
+      <div class="field">
+        <%= f.label :name, "Наименование организации" %>
+        <%= f.text_field :name, placeholder: "ФГБОУ ВО «Амурский государственный университет»" %>
+      </div>
+      
+      <div class="field">
+        <%= f.label :federal_district, "Федеральный округ" %>
+        <%= f.select :federal_district, 
+              [
+                "Дальневосточный", 
+                "Приволжский", 
+                "Северо-Западный", 
+                "Северо-Кавказский", 
+                "Сибирский", 
+                "Уральский", 
+                "Центральный", 
+                "Южный"
+              ], 
+              { include_blank: "Выберете федеральный округ" }, 
+              { class: "ui dropdown" } %>
+      </div>
+      
+      <div class="field">
+        <%= f.label :federal_subject, "Субъект РФ" %>
+        <%= f.text_field :federal_subject, placeholder: "Амурская область" %>
+      </div>
+      
+      <div class="actions">
+        <%= f.submit "Создать", class: "ui primary button" %>
+        <button type="button" class="ui button" id="cancel_modal_btn">Отмена</button>
+      </div>
+    <% end %>
+  </div>
+</div>
+<% content_for :javascript_packs do %>
+  <%= javascript_pack_tag 'educational_organizations' %>
+<% end %>

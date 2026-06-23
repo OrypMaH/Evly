@@ -1,0 +1,25 @@
+<div class="ui container">
+  <div class="ui segment">
+    <h1 class="ui header">
+      <i class="edit icon"></i>
+      Редактирование плана
+      <div class="sub header">
+        <%= @plan.title %>
+      </div>
+    </h1>
+    
+    
+    <%= render 'form', plan: @plan %>
+    
+    <div class="ui segment">
+      <div class="ui buttons">
+        <%= link_to [@department,@plan], class: 'ui button' do %>
+          <i class="arrow left icon"></i> Назад к плану
+        <% end %>
+        <%= link_to department_plans_path(@department), class: 'ui button' do %>
+          <i class="list icon"></i> К списку планов
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

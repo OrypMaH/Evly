@@ -1,0 +1,73 @@
+<div class="ui container">
+  <div class="ui segment">
+    <h1 class="ui header">
+      Предложить участие в мероприятии
+      <div class="sub header">
+        <%= @event.title %>
+      </div>
+    </h1>
+    
+    <% if @event.description.present? %>
+      <div class="ui message">
+        <div class="header">Описание мероприятия</div>
+        <p><%= @event.description %></p>
+      </div>
+    <% end %>
+    
+    <%= form_tag offer_event_path(@event), method: :post, class: "ui form" do %>
+      <div class="field">
+        <label>Выберите подразделения для предложения участия:</label>
+        
+        <% if @available_departments.any? %>
+          <div class="ui relaxed divided list">
+            <% @available_departments.each do |department| %>
+              <div class="item">
+                <div class="ui checkbox">
+                  <%= check_box_tag "department_ids[]", 
+                                    department.id, 
+                                    false, 
+                                    id: "department_#{department.id}",
+                                    class: "hidden" %>
+                  <label for="department_<%= department.id %>">
+                    <div class="content">
+                      <div class="header">
+                        <%= department.name %>
+                        <% if department.description.present? %>
+                          <div class="sub header">
+                            <%= department.description %>
+                          </div>
+                        <% end %>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="ui warning message">
+            <div class="header">Нет доступных подразделений</div>
+            <p>У вас нет прав предлагать участие в этом мероприятии каким-либо подразделениям.</p>
+          </div>
+        <% end %>
+      </div>
+      
+      <% if @available_departments.any? %>
+        <div class="ui segment">
+          <div class="ui two column grid">
+            <div class="column">
+              <%= submit_tag "Предложить участие", class: "ui primary button" %>
+              <%= link_to "Отмена", events_path, class: "ui button" %>
+            </div>
+            <div class="column right aligned">
+              <div class="ui statistic">
+                <div class="value" id="selected-count">0</div>
+                <div class="label">выбрано</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+</div>

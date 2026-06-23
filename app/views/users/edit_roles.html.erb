@@ -6,7 +6,7 @@
   <div class="field">
     <label>Должности</label>
     <%= f.select :role_ids, 
-                 Role.all.map { |r| [r.name, r.id] },
+                 @roles.map { |r| [r.name, r.id] },
                  { selected: @user.role_ids, include_blank: false },
                  { multiple: true, class: 'ui fluid dropdown', size: 6 } %>
   </div>

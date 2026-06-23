@@ -1,0 +1,192 @@
+<%# app/views/users/edit_roles.html.erb %>
+
+<div class="ui container">
+  <!-- Заголовок в стиле АмГУ -->
+  <h3 class="ui header orange" style="margin-top: 1em;">
+    <i class="bordered inverted orange icon user secret"></i>
+    <div class="content">
+      Управление ролями
+      <div class="sub header">
+        <%= @user.full_name %> - <%= @department.name %>
+      </div>
+    </div>
+  </h3>
+
+  <!-- Верхняя навигационная панель -->
+  <div class="ui grey inverted menu top attached amgu-green" style="border-radius: 8px 8px 0 0 !important;">
+    <%= link_to :back, class: 'item' do %>
+      <i class="arrow left icon"></i> Назад
+    <% end %>
+    
+    <%= link_to department_users_path(@department), class: 'item' do %>
+      <i class="users icon"></i> Сотрудники
+    <% end %>
+    
+    <div class="right menu">
+      <span class="item">
+        <i class="building icon"></i>
+        <%= @department.name %>
+      </span>
+    </div>
+  </div>
+
+  <!-- Основной контент -->
+  <div class="ui bottom attached segment" style="padding: 1.5em;">
+    
+    <!-- Информация о пользователе -->
+    <div class="ui segment" style="background: #f9f9f9;">
+      <div class="ui stackable two column grid">
+        <div class="column">
+          <h4 class="ui header" style="margin-bottom: 0;">
+            <i class="user icon" style="color: #016559;"></i>
+            <%= @user.full_name %>
+          </h4>
+          <div class="ui tiny grey text">
+            <i class="envelope icon"></i> <%= @user.contact %>
+          </div>
+        </div>
+        <div class="column right aligned">
+          <div class="ui label">
+            <i class="users icon"></i>
+            Всего ролей: <strong><%= @user.roles.count %></strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Текущие роли пользователя -->
+    <div class="ui segment" style="margin-top: 1em;">
+      <h4 class="ui header" style="color: #016559;">
+        <i class="user secret icon"></i>
+        Роли пользователя в подразделении
+        <span class="ui teal circular mini label"><%= @user.roles.count %></span>
+      </h4>
+      
+      <% if @user.roles.any? %>
+        <div class="ui three column stackable grid">
+          <% @user.roles.each do |role| %>
+            <div class="column">
+              <div class="ui segment" style="padding: 0.8em;">
+                <div class="ui grid">
+                  <div class="eleven wide column">
+                    <i class="user circle icon" style="color: #016559;"></i>
+                    <strong><%= role.name %></strong>
+                    <% if role.description.present? %>
+                      <div class="ui tiny grey text">
+                        <%= truncate(role.description, length: 40) %>
+                      </div>
+                    <% end %>
+                  </div>
+                  <div class="five wide column right aligned">
+                    <% if can?(:assign, role) %>
+                      <%= link_to remove_user_role_path(role, user_id: @user.id), 
+                                  method: :delete,
+                                  class: 'ui circular red icon button',
+                                  data: { 
+                                    confirm: "Удалить роль '#{role.name}' у пользователя '#{@user.full_name}'?",
+                                    tooltip: "Удалить роль",
+                                    position: "top center"
+                                  } do %>
+                        <i class="times icon"></i>
+                      <% end %>
+                    <% else %>
+                      <div class="ui disabled circular icon button" data-tooltip="Нет прав для удаления">
+                        <i class="times icon"></i>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="ui placeholder segment" style="background: #f9f9f9; border: 2px dashed #ccc;">
+          <div class="ui icon header" style="color: #666;">
+            <i class="user secret icon" style="color: #016559;"></i>
+            У пользователя нет ролей в этом подразделении
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Доступные роли для назначения -->
+    <div class="ui segment" style="margin-top: 1em;">
+      <h4 class="ui header" style="color: #016559;">
+        <i class="plus circle icon"></i>
+        Доступные роли для назначения
+      </h4>
+      
+      <% available_roles = @roles - @user.roles %>
+      <% if available_roles.any? %>
+        <div class="ui three column stackable grid">
+          <% available_roles.each do |role| %>
+            <div class="column">
+              <div class="ui segment" style="padding: 0.8em;">
+                <div class="ui grid">
+                  <div class="eleven wide column">
+                    <i class="user circle outline icon" style="color: #016559;"></i>
+                    <strong><%= role.name %></strong>
+                    <% if role.description.present? %>
+                      <div class="ui tiny grey text">
+                        <%= truncate(role.description, length: 40) %>
+                      </div>
+                    <% end %>
+                  </div>
+                  <div class="five wide column right aligned">
+                    <% if can?(:assign, role) %>
+                      <%= link_to assign_user_role_path(role, user_id: @user.id), 
+                                  method: :post,
+                                  class: 'ui circular green icon button',
+                                  data: { 
+                                    confirm: "Назначить роль '#{role.name}' пользователю '#{@user.full_name}'?",
+                                    tooltip: "Назначить роль",
+                                    position: "top center"
+                                  } do %>
+                        <i class="plus icon"></i>
+                      <% end %>
+                    <% else %>
+                      <div class="ui disabled circular icon button" data-tooltip="Нет прав для назначения">
+                        <i class="plus icon"></i>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="ui info message">
+          <i class="info circle icon"></i>
+          Все доступные роли уже назначены пользователю
+        </div>
+      <% end %>
+    </div>
+    
+    <!-- Кнопка возврата -->
+    <div style="margin-top: 1em;">
+      <%= link_to department_users_path(@department), class: 'ui button' do %>
+        <i class="arrow left icon"></i> К списку сотрудников
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<!-- Стили -->
+<style>
+  .ui.circular.icon.button {
+    width: 2.2em !important;
+    height: 2.2em !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  
+  @media only screen and (max-width: 767px) {
+    .ui.three.column.stackable.grid .column {
+      width: 100% !important;
+    }
+  }
+</style>

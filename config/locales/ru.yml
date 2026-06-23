@@ -1,0 +1,52 @@
+ru:
+  permissions:
+    generated_name: "%{action} %{resource} (%{scope})"
+    titles:
+      Role: "Роли"
+      Department: "Подразделения"
+      Event: "Мероприятия"
+      EventDepartment: "Участие в мероприятии"
+      Direction: "Направления ВР"
+      Plan: "Планы"
+      PlanEvent: "Составление планов"
+    actions:
+      create: "Создание"
+      edit: "Редактирование"
+      update: "Редактирование"
+      delete: "Удаление"
+      show: "Просмотр"
+      view: "Видеть"
+      assign: "Назначение"
+      approve: "Одобрять"
+      reject: "Отклонять"
+      offer: "Предлагать"
+      manage: "Управление"
+    resources:
+      Role: "ролей"
+      Department: "подразделений"
+      Event: "мероприятий"
+      EventDepartment: "участие в мероприятии"
+      Direction: "направлений ВР"
+      PlanEvent: "Составление планов"
+      Plan: "планов"
+    scopes:
+      own_department: "Для своего подразделения"
+      child_departments: "Для подчиненных подразделениях"
+      department_hierarchy: "Родственные подразделения"
+      personal: "Личные"
+      any: "Все"
+  date:
+    formats:
+      default: "%d.%m.%Y"
+      long: "%-d %B %Y"
+      short: "%-d %b"
+    month_names: [~, Января, Февраля, Марта, Апреля, Мая, Июня, Июля, Августа, Сентября, Октября, Ноября, Декабря]
+    abbr_month_names: [~, янв, фев, мар, апр, май, июн, июл, авг, сен, окт, ноя, дек]
+    day_names: [Воскресенье, Понедельник, Вторник, Среда, Четверг, Пятница, Суббота]
+    abbr_day_names: [Вс, Пн, Вт, Ср, Чт, Пт, Сб]
+  
+  time:
+    formats:
+      default: "%d.%m.%Y %H:%M"
+      long: "%d %B %Y %H:%M"
+      short: "%d %b %H:%M"
